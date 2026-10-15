@@ -66,3 +66,12 @@ def test_calculate_endpoint_rejects_invalid_clock_time():
 def test_calculate_endpoint_does_not_guess_ambiguous_dst_time():
     response = client.post("/api/calculate", json={"birth_date":"2024-11-03","birth_time":"01:30","time_zone":"America/New_York","latitude":40.7128,"longitude":-74.0060})
     assert response.status_code == 422
+
+
+def test_calculate_endpoint_requires_configured_engine_token(monkeypatch):
+    monkeypatch.setenv("JATAKA_ENGINE_TOKEN", "test-secret")
+    payload = {"birth_date":"2000-01-01","birth_time":"12:00","time_zone":"Asia/Kolkata","latitude":13.0827,"longitude":80.2707}
+    denied = client.post("/api/calculate", json=payload)
+    assert denied.status_code == 401
+    accepted = client.post("/api/calculate", json=payload, headers={"X-Jataka-Engine-Token":"test-secret"})
+    assert accepted.status_code == 200
