@@ -76,6 +76,7 @@ def status() -> dict[str, object]:
         "derived_factors": ["signs", "whole-sign houses", "nakshatra/pada", "Navamsa D9", "Vimshottari Mahadasha sequence", "Jaimini Chara Karakas", "Arudha Padas"],
         "verification_passes": ["Parashari/Swiss Ephemeris", "Jaimini factors including Arudha Padas", "Bhinna/Sarvashtakavarga and sign-based transit scores"],
         "optional_modules": ["Pythagorean and Chaldean numerology", "user-recorded palmistry reflection"],
+        "integrated_outlook": True,
         "message": (
             "Numerical and derived outputs are unvalidated and must not be treated "
             "as an independently verified horoscope."
