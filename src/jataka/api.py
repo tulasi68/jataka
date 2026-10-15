@@ -1,5 +1,5 @@
 """FastAPI entry point and calculation API for Jataka."""
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timezone
 import os
 import secrets
 from pathlib import Path
@@ -12,13 +12,13 @@ from pydantic import BaseModel, Field
 
 from jataka import __version__
 from jataka.birth_time import BirthTimeError, local_birth_time_to_utc
-from jataka.parashari_engine import BirthData, CalculationSettings, CalculationError, calculate_chart
+from jataka.parashari_engine import BirthData, CalculationSettings, CalculationError, calculate_chart, calculate_transit_longitudes
 from jataka.derived_engine import derive_chart_factors
 from jataka.report_engine import build_personal_report
 from jataka.jaimini_engine import JaiminiSettings, calculate_jaimini_factors
 from jataka.numerology_engine import calculate_numerology
 from jataka.palmistry_engine import build_palmistry_reflection
-from jataka.verification import PassEvidence, verify_three_passes
+from jataka.verification import PassEvidence, verify_three_passes\nfrom jataka.ashtakavarga_engine import calculate_ashtakavarga, calculate_transit_triggers
 
 INDEX_FILE = Path(__file__).resolve().parent / "static" / "index.html"
 app = FastAPI(
