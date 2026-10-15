@@ -5,12 +5,12 @@ from jataka.api import app
 client = TestClient(app)
 
 
-def test_home_serves_interactive_no_chart_app() -> None:
+def test_home_serves_interactive_chart_app() -> None:
     response = client.get("/")
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
     assert "Jataka" in response.text
-    assert "No horoscope chart is shown" in response.text
+    assert "South Indian Rāśi chart" in response.text
 
 
 def test_health_endpoint() -> None:
@@ -22,7 +22,7 @@ def test_health_endpoint() -> None:
 def test_status_marks_calculations_enabled_but_unvalidated() -> None:
     response = client.get("/api/status")
     assert response.status_code == 200
-    assert response.json()["chart_display"] is False
+    assert response.json()["chart_display"] is True
     assert response.json()["calculations_enabled"] is True
     assert response.json()["calculation_status"] == "unvalidated"
     assert response.json()["input_storage"] is False
@@ -54,6 +54,9 @@ def test_calculate_endpoint_returns_unvalidated_lahiri_positions():
     assert result["settings"]["house_system"] == "W"
     assert result["calculation_status"].startswith("UNVALIDATED")
     assert "Sun" in result["planets"] and "birth_time_utc" in result
+    assert result["derived_factors"]["status"] == "DERIVED_UNVALIDATED"
+    assert result["derived_factors"]["ascendant"]["sign"] in {"Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"}
+    assert len(result["derived_factors"]["vimshottari"]["periods"]) == 9
 
 def test_calculate_endpoint_rejects_invalid_timezone():
     response = client.post("/api/calculate", json={"birth_date":"2000-01-01","birth_time":"12:00","time_zone":"Not/A_Real_Zone","latitude":13.0827,"longitude":80.2707})
