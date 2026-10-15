@@ -68,6 +68,8 @@ def test_calculate_endpoint_returns_unvalidated_lahiri_positions():
     assert len(result["common_reading"]["life_areas"]) >= 5
     assert "not independent verification" in result["common_reading"]["how_methods_fit"]["text"].lower()
     assert result["common_reading"]["limitations"]
+    assert result["common_reading"]["additional_lenses"]
+    assert any("Jaimini" in item["title"] for item in result["common_reading"]["additional_lenses"])
     assert "arudha_padas" in result["derived_factors"]["jaimini"]
 
 def test_calculate_endpoint_rejects_invalid_timezone():
