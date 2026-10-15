@@ -42,7 +42,7 @@ The package uses a src layout. Install it with pip install -e . before running t
 
 ## Interactive prototype
 
-The browser interface asks for birth details one step at a time, validates each response, allows back-navigation and correction, and offers a reviewed-input JSON export. The first version deliberately has no chart display, no horoscope calculations, no account system, and no server-side storage of entered details.
+The browser interface asks for birth details one step at a time, validates each response, allows back-navigation and correction, and provides an explicit birthplace search using Open-Meteo's geocoding API. The user selects a matching place; coordinates and a suggested IANA time zone are then displayed for confirmation. The first version deliberately has no chart display, no horoscope calculations, no account system, and no server-side storage of entered details.
 
 ## Hosted prototype
 
@@ -54,7 +54,7 @@ The guided interface is hosted on Cloudflare Pages:
 
 Cloudflare Pages deploys the static interface from `src/jataka/static` and serves the small status endpoints from `functions/`. The local FastAPI app remains available for development.
 
-This is an early prototype, not a validated astrology calculator. Input checks validate format and ranges, not astrological interpretations. Birthplace geocoding and calculation conventions remain unresolved.
+This is an early prototype, not a validated astrology calculator. Birthplace lookup uses Open-Meteo's public geocoding endpoint (GeoNames data); it requires an internet connection and is intended for non-commercial use under the provider's published terms. The user must confirm the selected location; city-centre coordinates may not represent the exact birth building. Input checks validate format and ranges, not astrological interpretations. Astronomical calculation conventions and reference-chart validation remain unfinished.
 
 ## Important conventions and limits
 
