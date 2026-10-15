@@ -2,14 +2,21 @@
 
 This module exposes raw, traceable calculations only. Interpretations are outside
 this module. Every result records the selected sidereal mode and house system.
+Lahiri (Chitrapaksha) is the initial ayanāṃśa standard; callers can override it
+explicitly for research comparisons.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from math import isfinite
 from threading import RLock
 
 import swisseph as swe
+
+
+class CalculationError(ValueError):
+    """The requested astronomical calculation could not be completed safely."""
 
 
 _SWISS_LOCK = RLock()
@@ -18,6 +25,9 @@ _SIDEREAL_MODES = {
     "raman": swe.SIDM_RAMAN,
     "krishnamurti": swe.SIDM_KRISHNAMURTI,
 }
+# Swiss Ephemeris house-system codes. We deliberately reject unknown codes
+# before passing them into the native library.
+_HOUSE_SYSTEMS = frozenset("PKORCAEVWBMTXHGU")
 _PLANETS = {
     "Sun": swe.SUN,
     "Moon": swe.MOON,
@@ -41,18 +51,18 @@ class BirthData:
     def __post_init__(self) -> None:
         if self.birth_time_utc.tzinfo is None or self.birth_time_utc.utcoffset() is None:
             raise ValueError("birth_time_utc must be timezone-aware")
-        if not -90 <= self.latitude <= 90:
-            raise ValueError("latitude must be between -90 and 90")
-        if not -180 <= self.longitude <= 180:
-            raise ValueError("longitude must be between -180 and 180")
+        if not isfinite(self.latitude) or not -90 <= self.latitude <= 90:
+            raise ValueError("latitude must be finite and between -90 and 90")
+        if not isfinite(self.longitude) or not -180 <= self.longitude <= 180:
+            raise ValueError("longitude must be finite and between -180 and 180")
 
 
 @dataclass(frozen=True)
 class CalculationSettings:
-    """Explicit astronomical choices; no default ayanāṃśa is silently assumed."""
+    """Explicit astronomical choices, with Lahiri as the agreed initial standard."""
 
-    sidereal_mode: str
     house_system: str
+    sidereal_mode: str = "lahiri"
     ruleset_version: str = "0.1.0"
 
     def __post_init__(self) -> None:
@@ -60,13 +70,20 @@ class CalculationSettings:
             raise ValueError(
                 "sidereal_mode must be one of: " + ", ".join(sorted(_SIDEREAL_MODES))
             )
-        if len(self.house_system) != 1 or not self.house_system.isascii():
-            raise ValueError("house_system must be one supported single-letter Swiss Ephemeris code")
+        if self.house_system not in _HOUSE_SYSTEMS:
+            raise ValueError(
+                "Unsupported house_system; use a documented Swiss Ephemeris house-system code"
+            )
+        if not self.ruleset_version.strip():
+            raise ValueError("ruleset_version must not be empty")
 
 
 def _julian_day_ut(moment: datetime) -> float:
     utc = moment.astimezone(timezone.utc)
-    decimal_hour = utc.hour + utc.minute / 60 + (utc.second + utc.microsecond / 1_000_000) / 3600
+    decimal_hour = (
+        utc.hour + utc.minute / 60
+        + (utc.second + utc.microsecond / 1_000_000) / 3600
+    )
     return swe.julday(utc.year, utc.month, utc.day, decimal_hour, swe.GREG_CAL)
 
 
@@ -81,25 +98,33 @@ def calculate_chart(birth: BirthData, settings: CalculationSettings) -> dict[str
     with _SWISS_LOCK:
         swe.set_sid_mode(_SIDEREAL_MODES[settings.sidereal_mode])
         planets: dict[str, dict[str, float]] = {}
-        for name, planet_id in _PLANETS.items():
-            values, _retflags = swe.calc_ut(jd_ut, planet_id, flags)
-            planets[name] = {
-                "longitude": float(values[0] % 360),
-                "latitude": float(values[1]),
-                "distance_au": float(values[2]),
-                "longitude_speed_deg_per_day": float(values[3]),
+        try:
+            for name, planet_id in _PLANETS.items():
+                values, _retflags = swe.calc_ut(jd_ut, planet_id, flags)
+                planets[name] = {
+                    "longitude": float(values[0] % 360),
+                    "latitude": float(values[1]),
+                    "distance_au": float(values[2]),
+                    "longitude_speed_deg_per_day": float(values[3]),
+                }
+            rahu_longitude = planets["Rahu"]["longitude"]
+            planets["Ketu"] = {
+                "longitude": float((rahu_longitude + 180) % 360),
+                "latitude": float(-planets["Rahu"]["latitude"]),
+                "distance_au": float(planets["Rahu"]["distance_au"]),
+                "longitude_speed_deg_per_day": float(
+                    planets["Rahu"]["longitude_speed_deg_per_day"]
+                ),
             }
-        rahu_longitude = planets["Rahu"]["longitude"]
-        planets["Ketu"] = {
-            "longitude": float((rahu_longitude + 180) % 360),
-            "latitude": float(-planets["Rahu"]["latitude"]),
-            "distance_au": float(planets["Rahu"]["distance_au"]),
-            "longitude_speed_deg_per_day": float(planets["Rahu"]["longitude_speed_deg_per_day"]),
-        }
-        cusps, angles = swe.houses_ex(
-            jd_ut, birth.latitude, birth.longitude,
-            settings.house_system.encode("ascii"), swe.FLG_SIDEREAL
-        )
+            cusps, angles = swe.houses_ex(
+                jd_ut, birth.latitude, birth.longitude,
+                settings.house_system.encode("ascii"), swe.FLG_SIDEREAL
+            )
+        except swe.Error as exc:
+            raise CalculationError(
+                "Swiss Ephemeris could not calculate this chart with the selected "
+                "coordinates and house system. Check the inputs and high-latitude limits."
+            ) from exc
 
     return {
         "status": "calculated_unvalidated",
