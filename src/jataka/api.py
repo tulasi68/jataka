@@ -31,6 +31,13 @@ app = FastAPI(
 )
 
 
+class ReflectionRequest(BaseModel):
+    birth_date: date
+    full_name: str | None = Field(default=None, max_length=200)
+    palmistry_hand: Literal["dominant", "non_dominant", "both"] = "dominant"
+    palmistry_observations: dict[str, str] | None = None
+
+
 class CalculationRequest(BaseModel):
     birth_date: date
     birth_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
@@ -73,6 +80,22 @@ def status() -> dict[str, object]:
             "as an independently verified horoscope."
         ),
     }
+
+
+@app.post("/api/reflection")
+def reflection(request: ReflectionRequest) -> dict[str, object]:
+    """Calculate optional cultural numerology/palmistry modules without birth time."""
+    result: dict[str, object] = {
+        "status": "REFLECTION_ONLY_NO_HOROSCOPE",
+        "warning": "No astronomical chart or horoscope has been calculated.",
+    }
+    if request.full_name and request.full_name.strip():
+        result["numerology"] = calculate_numerology(request.full_name, request.birth_date)
+    if request.palmistry_observations is not None:
+        result["palmistry"] = build_palmistry_reflection(
+            request.palmistry_observations, request.palmistry_hand
+        )
+    return result
 
 
 @app.post("/api/calculate")
