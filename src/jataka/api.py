@@ -14,6 +14,7 @@ from jataka import __version__
 from jataka.birth_time import BirthTimeError, local_birth_time_to_utc
 from jataka.parashari_engine import BirthData, CalculationSettings, CalculationError, calculate_chart
 from jataka.derived_engine import derive_chart_factors
+from jataka.report_engine import build_personal_report
 
 INDEX_FILE = Path(__file__).resolve().parent / "static" / "index.html"
 app = FastAPI(
@@ -94,6 +95,7 @@ def calculate(
         result["derived_factors"] = derive_chart_factors(
             result["planets"], result["ascendant_longitude"], utc_moment
         )
+        result["personal_report"] = build_personal_report(result["derived_factors"])
     except (ZoneInfoNotFoundError, ValueError, BirthTimeError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except CalculationError as exc:
