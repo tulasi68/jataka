@@ -64,6 +64,10 @@ def test_calculate_endpoint_returns_unvalidated_lahiri_positions():
     assert result["verification"]["ready_to_label_verified"] is False
     assert result["multi_pass_outlook"]["status"] == "MULTI_PASS_TRADITIONAL_OUTLOOK_UNVALIDATED"
     assert len(result["multi_pass_outlook"]["passes"]) == 3
+    assert result["common_reading"]["status"] == "PLAIN_LANGUAGE_TRADITIONAL_INTERPRETATION_UNVALIDATED"
+    assert len(result["common_reading"]["life_areas"]) >= 5
+    assert "not independently verified" in result["common_reading"]["how_methods_fit"]["text"].lower()
+    assert result["common_reading"]["limitations"]
     assert "arudha_padas" in result["derived_factors"]["jaimini"]
 
 def test_calculate_endpoint_rejects_invalid_timezone():
