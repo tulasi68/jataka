@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from jataka import __version__
 from jataka.birth_time import BirthTimeError, local_birth_time_to_utc
 from jataka.parashari_engine import BirthData, CalculationSettings, CalculationError, calculate_chart
+from jataka.derived_engine import derive_chart_factors
 
 INDEX_FILE = Path(__file__).resolve().parent / "static" / "index.html"
 app = FastAPI(
@@ -51,14 +52,15 @@ def status() -> dict[str, object]:
         "application": "Jataka",
         "version": __version__,
         "guided_input_prototype": True,
-        "chart_display": False,
+        "chart_display": True,
         "calculations_enabled": True,
         "calculation_status": "unvalidated",
         "input_storage": False,
         "engine_authentication_enabled": bool(os.getenv("JATAKA_ENGINE_TOKEN")),
+        "derived_factors": ["signs", "whole-sign houses", "nakshatra/pada", "Navamsa D9", "Vimshottari Mahadasha sequence", "Jaimini Chara Karakas (7/8 variants)"],
         "message": (
-            "The first numerical pass accepts confirmed birth details. Its output is "
-            "unvalidated and must not be treated as an established horoscope."
+            "Numerical and derived outputs are unvalidated and must not be treated "
+            "as an independently verified horoscope."
         ),
     }
 
@@ -89,6 +91,9 @@ def calculate(
                 house_system=request.house_system,
             ),
         )
+        result["derived_factors"] = derive_chart_factors(
+            result["planets"], result["ascendant_longitude"], utc_moment
+        )
     except (ZoneInfoNotFoundError, ValueError, BirthTimeError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except CalculationError as exc:
@@ -103,7 +108,7 @@ def calculate(
     result["calculation_status"] = "UNVALIDATED — compare with independently sourced reference charts"
     result["warnings"] = list(result["warnings"]) + [
         "House system W (whole-sign) is explicitly selected for this initial pass.",
-        "No horoscope chart or astrological interpretation is generated.",
+        "Derived sign, house, Nakshatra/pada, Navamsa, Vimshottari, and Chara Karaka outputs inherit the unvalidated source longitudes.",
         "Input details are processed for this request and are not persisted by this API.",
     ]
     return result
