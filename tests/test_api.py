@@ -62,6 +62,8 @@ def test_calculate_endpoint_returns_unvalidated_lahiri_positions():
     assert len(result["transit_analysis"]["transits"]) == 7
     assert result["verification"]["status"] == "INCOMPLETE_SOURCE_INDEPENDENCE_NOT_ESTABLISHED"
     assert result["verification"]["ready_to_label_verified"] is False
+    assert result["multi_pass_outlook"]["status"] == "MULTI_PASS_TRADITIONAL_OUTLOOK_UNVALIDATED"
+    assert len(result["multi_pass_outlook"]["passes"]) == 3
     assert "arudha_padas" in result["derived_factors"]["jaimini"]
 
 def test_calculate_endpoint_rejects_invalid_timezone():
