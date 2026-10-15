@@ -19,11 +19,12 @@ def test_health_endpoint() -> None:
     assert response.json()["status"] == "ok"
 
 
-def test_status_is_clear_that_calculations_are_disabled() -> None:
+def test_status_marks_calculations_enabled_but_unvalidated() -> None:
     response = client.get("/api/status")
     assert response.status_code == 200
     assert response.json()["chart_display"] is False
-    assert response.json()["calculations_enabled"] is False
+    assert response.json()["calculations_enabled"] is True
+    assert response.json()["calculation_status"] == "unvalidated"
     assert response.json()["input_storage"] is False
 
 
@@ -42,3 +43,26 @@ def test_swiss_ephemeris_returns_positions():
 def test_engine_requires_explicit_sidereal_mode():
     with pytest.raises(ValueError, match='sidereal_mode'):
         CalculationSettings(sidereal_mode='', house_system='W')
+
+
+def test_calculate_endpoint_returns_unvalidated_lahiri_positions():
+    response = client.post("/api/calculate", json={"birth_date":"2000-01-01","birth_time":"12:00","time_zone":"Asia/Kolkata","latitude":13.0827,"longitude":80.2707})
+    assert response.status_code == 200
+    result = response.json()
+    assert result["status"] == "calculated_unvalidated"
+    assert result["settings"]["sidereal_mode"] == "lahiri"
+    assert result["settings"]["house_system"] == "W"
+    assert result["calculation_status"].startswith("UNVALIDATED")
+    assert "Sun" in result["planets"] and "birth_time_utc" in result
+
+def test_calculate_endpoint_rejects_invalid_timezone():
+    response = client.post("/api/calculate", json={"birth_date":"2000-01-01","birth_time":"12:00","time_zone":"Not/A_Real_Zone","latitude":13.0827,"longitude":80.2707})
+    assert response.status_code == 422
+
+def test_calculate_endpoint_rejects_invalid_clock_time():
+    response = client.post("/api/calculate", json={"birth_date":"2000-01-01","birth_time":"25:99","time_zone":"Asia/Kolkata","latitude":13.0827,"longitude":80.2707})
+    assert response.status_code == 422
+
+def test_calculate_endpoint_does_not_guess_ambiguous_dst_time():
+    response = client.post("/api/calculate", json={"birth_date":"2024-11-03","birth_time":"01:30","time_zone":"America/New_York","latitude":40.7128,"longitude":-74.0060})
+    assert response.status_code == 422
