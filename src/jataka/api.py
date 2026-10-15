@@ -26,8 +26,7 @@ app = FastAPI(
     title="Jataka — South Indian Astro Engine",
     version=__version__,
     description=(
-        "Guided birth-detail review and an early, explicitly unvalidated numerical "
-        "calculation endpoint. No horoscope chart or interpretation is produced."
+        "Guided birth details, unvalidated astronomical and derived Jyotish factors, three-pass analysis, and optional numerology/palmistry reflection."
     ),
 )
 
@@ -67,7 +66,7 @@ def status() -> dict[str, object]:
         "input_storage": False,
         "engine_authentication_enabled": bool(os.getenv("JATAKA_ENGINE_TOKEN")),
         "derived_factors": ["signs", "whole-sign houses", "nakshatra/pada", "Navamsa D9", "Vimshottari Mahadasha sequence", "Jaimini Chara Karakas", "Arudha Padas"],
-        "verification_passes": ["Parashari/Swiss Ephemeris", "Jaimini factors", "Ashtakavarga/Gochara (not yet implemented)"],
+        "verification_passes": ["Parashari/Swiss Ephemeris", "Jaimini factors including Arudha Padas", "Bhinna/Sarvashtakavarga and sign-based transit scores"],
         "optional_modules": ["Pythagorean and Chaldean numerology", "user-recorded palmistry reflection"],
         "message": (
             "Numerical and derived outputs are unvalidated and must not be treated "
