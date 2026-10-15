@@ -23,7 +23,8 @@ Jataka is a modular research and software project for implementing a South India
 - src/jataka/jaimini_engine.py — Jaimini factor boundary.
 - src/jataka/ashtakavarga_engine.py — Ashtakavarga and transit boundary.
 - src/jataka/consensus.py — deterministic evidence aggregation.
-- src/jataka/api.py — FastAPI application.
+- src/jataka/api.py — local FastAPI application.
+- functions/ — Cloudflare Pages endpoints for health and prototype status.
 
 ## Development
 
@@ -39,6 +40,22 @@ Python 3.11 or later is recommended.
 
 The package uses a src layout. Install it with pip install -e . before running the app.
 
+## Interactive prototype
+
+The browser interface asks for birth details one step at a time, validates each response, allows back-navigation and correction, and offers a reviewed-input JSON export. The first version deliberately has no chart display, no horoscope calculations, no account system, and no server-side storage of entered details.
+
+## Hosted prototype
+
+The guided interface is hosted on Cloudflare Pages:
+
+- Website: https://jataka.pages.dev
+- Health endpoint: https://jataka.pages.dev/health
+- Prototype status: https://jataka.pages.dev/api/status
+
+Cloudflare Pages deploys the static interface from `src/jataka/static` and serves the small status endpoints from `functions/`. The local FastAPI app remains available for development.
+
+This is an early prototype, not a validated astrology calculator. Input checks validate format and ranges, not astrological interpretations. Birthplace geocoding and calculation conventions remain unresolved.
+
 ## Important conventions and limits
 
 - Birth date/time must be interpreted in the birth location's time zone; never silently assume the machine's local zone.
@@ -49,17 +66,3 @@ The package uses a src layout. Install it with pip install -e . before running t
 - This project is not a substitute for professional, medical, financial, or legal advice.
 
 See docs/PHASE1_CONCEPT.md, docs/CALCULATION_CONVENTIONS.md, and docs/INTERACTION_AND_TRUST.md.
-
-
-## Interactive prototype
-
-The browser interface is served at `/` by FastAPI. It asks for birth details one step at a time, validates each response, allows back-navigation and correction, and offers a reviewed-input JSON export. The first version deliberately has no chart display, no horoscope calculations, no account system, and no server-side storage of entered details.
-
-Run locally:
-
-    pip install -e ".[dev]"
-    uvicorn jataka.api:app --reload
-
-Open http://127.0.0.1:8000. The health endpoint is `/health`; prototype capability status is `/api/status`.
-
-This is an early prototype, not a production deployment. Its validation checks input format and ranges, not the correctness of astrological interpretations. Birthplace geocoding and calculation conventions remain unresolved.
