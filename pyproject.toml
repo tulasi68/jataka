@@ -5,7 +5,9 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "jataka"
 version = "0.1.0"
-description = "Modular South Indian Vedic astrology calculation engine scaffold"
+description = "Modular South Indian Vedic astrology calculation engine"
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
