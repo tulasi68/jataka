@@ -110,14 +110,39 @@ def calculate(
             JaiminiSettings(chara_karaka_count=7, include_rahu=False),
         )
         result["personal_report"] = build_personal_report(result["derived_factors"])
+        natal_positions = {name: int(float(item["longitude"]) // 30) for name, item in result["planets"].items()}
+        natal_positions["Lagna"] = int(float(result["ascendant_longitude"]) // 30)
+        result["ashtakavarga"] = calculate_ashtakavarga(natal_positions)
+        transit_moment = datetime.now(timezone.utc)
+        transit_result = calculate_transit_longitudes(
+            transit_moment, CalculationSettings(sidereal_mode=request.sidereal_mode, house_system=request.house_system)
+        )
+        transit_positions = {name: int(item["sign_index"]) for name, item in transit_result["planets"].items()}
+        result["transit_analysis"] = calculate_transit_triggers(natal_positions, transit_positions)
+        result["transit_analysis"]["as_of_utc"] = transit_result["as_of_utc"]
+        result["transit_analysis"]["positions_source"] = "Swiss Ephemeris; unvalidated"
         result["verification"] = verify_three_passes([
             PassEvidence(
-                pass_name="parashari", source_id="swiss-ephemeris",
+                pass_name="parashari", source_id="shared-swiss-ephemeris-natal-positions",
                 status="calculated_unvalidated", findings={
                     "astronomical_positions": "computed",
                     "sign_and_house_derivation": "computed",
                 }, reference_validated=False,
-            )
+            ),
+            PassEvidence(
+                pass_name="jaimini", source_id="shared-swiss-ephemeris-natal-positions",
+                status="derived_unvalidated", findings={
+                    "natal_symbolic_factors": "computed",
+                    "arudha_lagna_sign": str(result["derived_factors"]["jaimini"]["arudha_padas"]["arudha_lagna"]["arudha_sign"]),
+                }, reference_validated=False,
+            ),
+            PassEvidence(
+                pass_name="ashtakavarga_transit", source_id="shared-swiss-ephemeris-natal-positions",
+                status="derived_unvalidated", findings={
+                    "ashtakavarga_total": str(result["ashtakavarga"]["sarvashtakavarga"]["total"]),
+                    "transit_sign_scores": "computed",
+                }, reference_validated=False,
+            ),
         ])
         if request.full_name and request.full_name.strip():
             result["numerology"] = calculate_numerology(request.full_name, request.birth_date)
