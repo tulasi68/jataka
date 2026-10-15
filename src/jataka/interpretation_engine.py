@@ -161,14 +161,14 @@ def build_common_reading(
                     f"Moon in {moon.get('sign', 'an unavailable sign')} is traditionally associated "
                     f"with {PLANET_PLAIN['Moon']}. This does not establish your actual feelings "
                     "or personality; compare it with your lived experience."
-                ) if moon else {"text": "Moon placement unavailable."},
+                ) if moon else "Moon placement unavailable.",
             },
             {
                 "label": "Purpose and responsibility",
                 "text": (
                     f"Sun in {sun.get('sign', 'an unavailable sign')} is traditionally associated "
                     f"with {PLANET_PLAIN['Sun']}. Treat this as a reflection prompt, not a verdict."
-                ) if sun else {"text": "Sun placement unavailable."},
+                ) if sun else "Sun placement unavailable.",
             },
         ],
         "life_areas": sections,
