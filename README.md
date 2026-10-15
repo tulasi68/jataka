@@ -59,7 +59,7 @@ This is an early prototype, not a validated astrology calculator. Birthplace loo
 ## Important conventions and limits
 
 - Birth date/time must be interpreted in the birth location's time zone; never silently assume the machine's local zone.
-- Astronomical calculation settings, including Swiss Ephemeris version, sidereal mode/ayanāṃśa, house system, and coordinates, must be recorded with outputs.
+- The initial ayanāṃśa standard is Lahiri (Chitrapaksha); any alternative mode must be explicitly selected and recorded.\n- Astronomical calculation settings, including Swiss Ephemeris version, sidereal mode/ayanāṃśa, house system, and coordinates, must be recorded with outputs.
 - Parāśari, Jaimini, and Ashtakavarga outputs remain separate evidence streams.
 - Consensus scores are software bookkeeping, not a measure of scientific truth or predictive accuracy.
 - Any AI-generated explanation must be presented as interpretation, not as a source of planetary positions or other calculated facts.
