@@ -148,3 +148,43 @@ def calculate_chart(birth: BirthData, settings: CalculationSettings) -> dict[str
             "Astrological interpretations are not produced by this module.",
         ],
     }
+
+
+
+def calculate_transit_longitudes(
+    moment_utc: datetime, settings: CalculationSettings
+) -> dict[str, object]:
+    """Calculate sidereal planetary longitudes for a specified UTC instant.
+
+    Transit longitudes are descriptive positions only; timing interpretations
+    require separately documented rules and validation.
+    """
+    if moment_utc.tzinfo is None or moment_utc.utcoffset() is None:
+        raise ValueError("moment_utc must be timezone-aware")
+    jd_ut = _julian_day_ut(moment_utc)
+    flags = swe.FLG_SWIEPH | swe.FLG_SIDEREAL | swe.FLG_SPEED
+    with _SWISS_LOCK:
+        swe.set_sid_mode(_SIDEREAL_MODES[settings.sidereal_mode])
+        positions = {}
+        try:
+            for name, planet_id in _PLANETS.items():
+                values, _retflags = swe.calc_ut(jd_ut, planet_id, flags)
+                positions[name] = {
+                    "longitude": float(values[0] % 360),
+                    "sign_index": int((values[0] % 360) // 30),
+                }
+            positions["Ketu"] = {
+                "longitude": float((positions["Rahu"]["longitude"] + 180) % 360),
+                "sign_index": int(((positions["Rahu"]["longitude"] + 180) % 360) // 30),
+            }
+        except swe.Error as exc:
+            raise CalculationError("Swiss Ephemeris could not calculate transit positions.") from exc
+    return {
+        "status": "calculated_unvalidated",
+        "as_of_utc": moment_utc.astimezone(timezone.utc).isoformat(),
+        "julian_day_ut": jd_ut,
+        "settings": {"sidereal_mode": settings.sidereal_mode, "ephemeris": "Swiss Ephemeris",
+                     "ephemeris_version": swe.version},
+        "planets": positions,
+        "warning": "Transit positions are not independently validated and do not constitute a prediction.",
+    }
