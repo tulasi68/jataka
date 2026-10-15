@@ -18,7 +18,8 @@ from jataka.report_engine import build_personal_report
 from jataka.jaimini_engine import JaiminiSettings, calculate_jaimini_factors
 from jataka.numerology_engine import calculate_numerology
 from jataka.palmistry_engine import build_palmistry_reflection
-from jataka.verification import PassEvidence, verify_three_passes\nfrom jataka.ashtakavarga_engine import calculate_ashtakavarga, calculate_transit_triggers
+from jataka.verification import PassEvidence, verify_three_passes
+from jataka.ashtakavarga_engine import calculate_ashtakavarga, calculate_transit_triggers
 
 INDEX_FILE = Path(__file__).resolve().parent / "static" / "index.html"
 app = FastAPI(
