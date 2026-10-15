@@ -42,7 +42,7 @@ The package uses a src layout. Install it with pip install -e . before running t
 
 ## Interactive prototype
 
-The browser interface asks for birth details one step at a time, validates each response, allows back-navigation and correction, and provides an explicit birthplace search using Open-Meteo's geocoding API. The user selects a matching place; coordinates and a suggested IANA time zone are then displayed for confirmation. The guided interface deliberately has no chart display and does not yet call the numerical engine. There is no account system or server-side storage of entered birth details.
+The browser interface asks for birth details one step at a time, validates each response, allows back-navigation and correction, and provides an explicit birthplace search using Open-Meteo's geocoding API. The user selects a matching place; coordinates and a suggested IANA time zone are then displayed for confirmation. The guided interface deliberately has no chart display. It submits confirmed birth details to the FastAPI calculation endpoint and displays raw planetary longitudes only with a prominent unvalidated status. On Cloudflare Pages, `/api/calculate` proxies to the separately hosted Python service when `JATAKA_ENGINE_URL` is configured; without that setting, it fails safely and performs no calculation. There is no account system or server-side storage of entered birth details.
 
 ## Hosted prototype
 
@@ -52,7 +52,7 @@ The guided interface is hosted on Cloudflare Pages:
 - Health endpoint: https://jataka.pages.dev/health
 - Prototype status: https://jataka.pages.dev/api/status
 
-Cloudflare Pages deploys the static interface from `src/jataka/static` and serves the small status endpoints from `functions/`. The local FastAPI app remains available for development.
+Cloudflare Pages deploys the static interface from `src/jataka/static` and serves the small status endpoints from `functions/`. The FastAPI app provides `POST /api/calculate` for local use and for a separately hosted Python service. It requires a confirmed date, exact local time, IANA time zone, and coordinates; ambiguous/nonexistent daylight-saving times are rejected rather than guessed. The first pass explicitly uses Lahiri and whole-sign houses (`W`) and returns unvalidated numerical data only. Hosted Pages requires a separately hosted Python/Swiss Ephemeris service and the `JATAKA_ENGINE_URL` environment variable.
 
 This is an early prototype, not a validated astrology calculator. Birthplace lookup uses Open-Meteo's public geocoding endpoint (GeoNames data); it requires an internet connection and is intended for non-commercial use under the provider's published terms. The user must confirm the selected location; city-centre coordinates may not represent the exact birth building. Input checks validate format and ranges, not astrological interpretations. Astronomical calculation conventions and reference-chart validation remain unfinished.
 
@@ -73,4 +73,4 @@ Jataka is licensed under the GNU Affero General Public License, version 3 or (at
 
 ## Calculation status
 
-The first Swiss Ephemeris module is an engineering foundation, not a claim of astrological correctness. Its output includes the selected sidereal mode, house system, library version and explicit warnings. Reference-chart validation, edge-case testing, documented convention choices, and integration with the guided interface are still required before calculations should be presented to users as validated.
+The first Swiss Ephemeris module is an engineering foundation, not a claim of astrological correctness. Its output includes the selected sidereal mode, house system, library version and explicit warnings. Reference-chart validation, edge-case testing, documented convention choices, independent reference-chart validation is still required before calculations should be presented as validated. The interface integration does not change this status.
