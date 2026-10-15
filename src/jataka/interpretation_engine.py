@@ -123,6 +123,46 @@ def build_common_reading(
         if isinstance(p, Mapping) and p.get("current_vimshottari_mahadasha"):
             active_period = _mapping(p.get("current_vimshottari_mahadasha"))
             break
+    passes = _mapping(multi_pass_outlook).get("passes", [])
+    jaimini_pass = next((p for p in passes if isinstance(p, Mapping) and p.get("name") == "Jaimini"), {}) if isinstance(passes, list) else {}
+    transit_pass = next((p for p in passes if isinstance(p, Mapping) and p.get("name") == "Ashtakavarga / Gochara"), {}) if isinstance(passes, list) else {}
+    additional_lenses: list[dict[str, object]] = []
+    arudha_sign = _mapping(jaimini_pass).get("arudha_lagna_sign")
+    atmakaraka = _mapping(jaimini_pass).get("atmakaraka")
+    if arudha_sign:
+        additional_lenses.append({
+            "title": "How you may appear to others — Jaimini perspective",
+            "text": (
+                f"The calculated Arudha Lagna is {arudha_sign}. In one traditional Jaimini reading, "
+                "Arudha Lagna is used to reflect on outward presentation or public image. "
+                f"The sign's symbolic theme is {SIGN_REFLECTIONS.get(str(arudha_sign), 'not available')}. "
+                "This is a tradition-specific interpretation, not evidence of how other people actually see you."
+            ),
+        })
+    if atmakaraka:
+        additional_lenses.append({
+            "title": "A theme for self-development — Jaimini perspective",
+            "text": (
+                f"The calculated Chara Atmakaraka is {atmakaraka}. Some Jaimini traditions use this "
+                "factor as a prompt for reflection on inner priorities or self-development. "
+                f"The associated symbolic theme here is {PLANET_PLAIN.get(str(atmakaraka), 'traditional planetary themes')}. "
+                "The role assignment and interpretation remain unvalidated."
+            ),
+        })
+    sav_total = _mapping(transit_pass).get("sarvashtakavarga_total")
+    transit_indicators = _mapping(transit_pass).get("transit_indicators", [])
+    if sav_total is not None:
+        additional_lenses.append({
+            "title": "Current planetary positions — Ashtakavarga and transit perspective",
+            "text": (
+                f"The computed Sarvashtakavarga total is {sav_total}. This is a traditional aggregate "
+                "count, not a percentage, a fortune score, or a measure of how good your life will be. "
+                "Transit sign counts are listed in the technical details; the current implementation "
+                "does not translate them into guaranteed good or bad events."
+            ),
+            "transit_indicators": transit_indicators if isinstance(transit_indicators, list) else [],
+        })
+
     period = None
     if active_period:
         sub = _mapping(active_period.get("antardasha"))
@@ -172,6 +212,7 @@ def build_common_reading(
             },
         ],
         "life_areas": sections,
+        "additional_lenses": additional_lenses,
         "current_period": period,
         "how_methods_fit": {
             "status": _mapping(verification).get("status", "status unavailable"),
