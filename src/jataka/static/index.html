@@ -78,7 +78,7 @@ function renderRasiChart(payload){
   if(sign===ascSign)inSign.unshift("Ascendant");
   return '<div class="rasi-cell '+(sign===ascSign?'rising':'')+'" style="'+pos+'"><span class="sign">'+signs[sign]+'</span><span class="house">H'+houseForSign(sign)+'</span>'+inSign.map(n=>'<span class="graha">'+esc(n)+'</span>').join("")+'</div>';
  }).join("");
- const center='<div class="rasi-cell center" style="grid-column:2/4;grid-row:2/4"><div><strong>Jataka</strong><p style="margin:.35rem 0">South Indian<br>Rāśi chart</p><span class="chart-key">Cancer rising assumed from supplied ascendant</span></div></div>';
+ const center='<div class="rasi-cell center" style="grid-column:2/4;grid-row:2/4"><div><strong>Jataka</strong><p style="margin:.35rem 0">South Indian<br>Rāśi chart</p><span class="chart-key">'+esc(signs[ascSign])+' rising from supplied ascendant</span></div></div>';
  const table=placements.map(p=>'<tr><td>'+esc(p.name)+'</td><td>'+signs[p.idx]+' '+(p.lon%30).toFixed(2)+'°</td><td>'+p.house+'</td><td>'+esc(planetThemes[p.name]||"traditional planetary significations")+'</td><td>'+esc(houseThemes[p.house-1])+'</td></tr>').join("");
  const ascDegree=(asc%30).toFixed(2);
  const ascExplain='<p><strong>Ascendant:</strong> '+signs[ascSign]+' '+ascDegree+'°. In traditional Jyotish, the ascendant is used as the starting point for house topics and descriptions of approach to life. Its exact degree remains unvalidated.</p>';
