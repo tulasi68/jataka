@@ -23,3 +23,14 @@ attribution requirements before operating the service, especially for commercial
 - API documentation: https://open-meteo.com/en/docs/geocoding-api
 - GeoNames: https://www.geonames.org/
 - GeoNames data licence: https://creativecommons.org/licenses/by/4.0/
+
+
+## Ashtakavarga rule-table references
+
+The seven-recipient Bhinna Ashtakavarga benefic-house table is encoded as rule data in Jataka and should be compared against the specific tradition/reference selected for a release. Publicly accessible comparison material includes:
+
+- [B.V. Raman, “The Ashtakavarga System” chapter extract](https://vedastro.org/blog/Hindu-Predictive-Astrology-Chapter-26-The-Ashtakavarga-System.html)
+- [Jyotishganit Ashtakavarga implementation and rule table](https://github.com/northtara/jyotishganit/blob/main/jyotishganit/components/ashtakavarga.py)
+- [AstroSK Ashtakavarga reference tables](https://docs.astrosk.com/glossary/vedic/ashtakavarga/definition-of-suns-ashtakavarga)
+
+These are comparison sources, not a declaration that all lineages agree. Review upstream licenses before copying implementation code; Jataka stores its own explicit rule data and documents the chosen convention. No third-party implementation code is imported at runtime.
