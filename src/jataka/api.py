@@ -20,6 +20,7 @@ from jataka.numerology_engine import calculate_numerology
 from jataka.palmistry_engine import build_palmistry_reflection
 from jataka.verification import PassEvidence, verify_three_passes
 from jataka.ashtakavarga_engine import calculate_ashtakavarga, calculate_transit_triggers
+from jataka.forecast_engine import build_multi_pass_outlook
 
 INDEX_FILE = Path(__file__).resolve().parent / "static" / "index.html"
 app = FastAPI(
@@ -172,6 +173,11 @@ def calculate(
             result["palmistry"] = build_palmistry_reflection(
                 request.palmistry_observations, request.palmistry_hand
             )
+        result["multi_pass_outlook"] = build_multi_pass_outlook(
+            result["derived_factors"], result["ashtakavarga"], result["transit_analysis"],
+            result["verification"], numerology=result.get("numerology"),
+            palmistry=result.get("palmistry"), now_utc=transit_moment,
+        )
     except (ZoneInfoNotFoundError, ValueError, BirthTimeError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except CalculationError as exc:
