@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: jataka-engine
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: JATAKA_ENGINE_TOKEN
+        sync: false
