@@ -109,3 +109,19 @@ def test_calculate_endpoint_optional_numerology_and_palmistry():
     assert result["numerology"]["status"] == "NUMEROLOGY_COMPUTED_UNVALIDATED"
     assert result["palmistry"]["status"] == "PALMISTRY_REFLECTION_USER_RECORDED"
     assert result["palmistry"]["hand"] == "both"
+
+
+
+def test_reflection_endpoint_works_without_birth_time():
+    response = client.post("/api/reflection", json={
+        "birth_date": "2000-01-01",
+        "full_name": "Ada Lovelace",
+        "palmistry_hand": "dominant",
+        "palmistry_observations": {"heart_line": "uncertain"},
+    })
+    assert response.status_code == 200
+    result = response.json()
+    assert result["status"] == "REFLECTION_ONLY_NO_HOROSCOPE"
+    assert "numerology" in result
+    assert "palmistry" in result
+    assert "derived_factors" not in result
