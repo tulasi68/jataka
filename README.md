@@ -4,13 +4,17 @@ Jataka is a modular research and software project for implementing a South India
 
 **Status: initial scaffold.** This repository does not yet provide a complete or validated astrology calculator. Calculation modules identify unfinished work rather than inventing results.
 
+## Product principle
+
+**The initial product will not display a horoscope chart.** It will use an interactive, guided conversation with validation at every user answer. Ambiguous or invalid information should be clarified, not silently guessed. Users should be able to review and correct inputs before calculations run.
+
 ## Phase 1 goals
 
-1. Define explicit date/time, location, zodiac, ayanāṃśa, house, and chart conventions.
-2. Build independent modules for Parāśari/Drik calculations, Jaimini-derived factors, and Ashtakavarga/transits.
-3. Keep astronomical calculations deterministic and reproducible.
-4. Combine supplied evidence through a transparent, testable consensus matrix.
-5. Expose a small FastAPI interface for health checks and later chart requests.
+1. Define a guided question flow and immediate answer-validation rules.
+2. Define explicit date/time, location, zodiac, ayanāṃśa, house, and calculation conventions.
+3. Build independent modules for Parāśari/Drik calculations, Jaimini-derived factors, and Ashtakavarga/transits.
+4. Keep astronomical calculations deterministic and reproducible.
+5. Combine supplied evidence through a transparent, testable consensus matrix.
 6. Validate outputs against trusted reference charts before describing calculations as complete.
 
 ## Architecture
@@ -44,4 +48,4 @@ The package uses a src layout. Install it with pip install -e . before running t
 - Any AI-generated explanation must be presented as interpretation, not as a source of planetary positions or other calculated facts.
 - This project is not a substitute for professional, medical, financial, or legal advice.
 
-See docs/PHASE1_CONCEPT.md and docs/CALCULATION_CONVENTIONS.md.
+See docs/PHASE1_CONCEPT.md, docs/CALCULATION_CONVENTIONS.md, and docs/INTERACTION_AND_TRUST.md.
