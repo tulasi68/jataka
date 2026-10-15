@@ -6,7 +6,6 @@ import pytest
 from jataka.birth_time import BirthTimeError, local_birth_time_to_utc
 from jataka.parashari_engine import (
     BirthData,
-    CalculationError,
     CalculationSettings,
     calculate_chart,
 )
