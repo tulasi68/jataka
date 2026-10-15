@@ -57,6 +57,7 @@ def _plain_placement(name: str, placement: Mapping[str, object]) -> dict[str, ob
     topic = HOUSE_PLAIN.get(house, "a life area")
     planet_theme = PLANET_PLAIN.get(name, PLANET_TOPICS.get(name, "traditional symbolism"))
     sign_theme = SIGN_REFLECTIONS.get(sign, "traditional symbolic themes")
+    ordinal = {1: "1st", 2: "2nd", 3: "3rd"}.get(house, f"{house}th")
     return {
         "planet": name,
         "sign": sign,
@@ -66,7 +67,7 @@ def _plain_placement(name: str, placement: Mapping[str, object]) -> dict[str, ob
         "sign_theme": sign_theme,
         "plain_language": (
             f"In traditional Jyotish, {name} is associated with {planet_theme}. "
-            f"Placed in the {house}{'th' if house not in (1, 2, 3) else {1:'st',2:'nd',3:'rd'}[house]} "
+            f"Placed in the {ordinal} house, it is traditionally discussed in connection with {topic}. "
             f"house, it is traditionally discussed in connection with {topic}. "
             "Use this as a question to reflect on your own experience, not as a statement "
             "that this trait or outcome must apply to you."
