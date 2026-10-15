@@ -1,17 +1,38 @@
-"""Parāśari/Drik engine boundary.
+"""Deterministic Parāśari/Drik calculations using Swiss Ephemeris.
 
-Astronomical calculations must be deterministic and convention-explicit. This first
-scaffold deliberately does not return fabricated chart values. Implement features
-only alongside reference tests and a documented convention decision.
+This module exposes raw, traceable calculations only. Interpretations are outside
+this module. Every result records the selected sidereal mode and house system.
 """
+from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
+from threading import RLock
+
+import swisseph as swe
+
+
+_SWISS_LOCK = RLock()
+_SIDEREAL_MODES = {
+    "lahiri": swe.SIDM_LAHIRI,
+    "raman": swe.SIDM_RAMAN,
+    "krishnamurti": swe.SIDM_KRISHNAMURTI,
+}
+_PLANETS = {
+    "Sun": swe.SUN,
+    "Moon": swe.MOON,
+    "Mercury": swe.MERCURY,
+    "Venus": swe.VENUS,
+    "Mars": swe.MARS,
+    "Jupiter": swe.JUPITER,
+    "Saturn": swe.SATURN,
+    "Rahu": swe.MEAN_NODE,
+}
 
 
 @dataclass(frozen=True)
 class BirthData:
-    """Birth inputs; birth_time_utc must already be timezone-aware and in UTC."""
+    """Birth inputs; birth_time_utc must be timezone-aware."""
 
     birth_time_utc: datetime
     latitude: float
@@ -28,22 +49,77 @@ class BirthData:
 
 @dataclass(frozen=True)
 class CalculationSettings:
-    """Settings that must be explicitly selected before producing a chart."""
+    """Explicit astronomical choices; no default ayanāṃśa is silently assumed."""
 
     sidereal_mode: str
     house_system: str
     ruleset_version: str = "0.1.0"
 
+    def __post_init__(self) -> None:
+        if self.sidereal_mode not in _SIDEREAL_MODES:
+            raise ValueError(
+                "sidereal_mode must be one of: " + ", ".join(sorted(_SIDEREAL_MODES))
+            )
+        if len(self.house_system) != 1 or not self.house_system.isascii():
+            raise ValueError("house_system must be one supported single-letter Swiss Ephemeris code")
 
-def calculate_chart(
-    birth: BirthData, settings: CalculationSettings
-) -> dict[str, object]:
-    """Calculate a Parāśari chart.
 
-    Not implemented yet: choose and document the sidereal mode and house system,
-    then implement with Swiss Ephemeris and add reference-chart tests.
+def _julian_day_ut(moment: datetime) -> float:
+    utc = moment.astimezone(timezone.utc)
+    decimal_hour = utc.hour + utc.minute / 60 + (utc.second + utc.microsecond / 1_000_000) / 3600
+    return swe.julday(utc.year, utc.month, utc.day, decimal_hour, swe.GREG_CAL)
+
+
+def calculate_chart(birth: BirthData, settings: CalculationSettings) -> dict[str, object]:
+    """Calculate sidereal planetary longitudes and house cusps.
+
+    This is a numerical foundation, not a validated complete horoscope. Results
+    must be checked against versioned reference charts before production use.
     """
-    del birth, settings
-    raise NotImplementedError(
-        "Parāśari chart calculation is not implemented; see docs/CALCULATION_CONVENTIONS.md"
-    )
+    jd_ut = _julian_day_ut(birth.birth_time_utc)
+    flags = swe.FLG_SWIEPH | swe.FLG_SIDEREAL | swe.FLG_SPEED
+    with _SWISS_LOCK:
+        swe.set_sid_mode(_SIDEREAL_MODES[settings.sidereal_mode])
+        planets: dict[str, dict[str, float]] = {}
+        for name, planet_id in _PLANETS.items():
+            values, _retflags = swe.calc_ut(jd_ut, planet_id, flags)
+            planets[name] = {
+                "longitude": float(values[0] % 360),
+                "latitude": float(values[1]),
+                "distance_au": float(values[2]),
+                "longitude_speed_deg_per_day": float(values[3]),
+            }
+        rahu_longitude = planets["Rahu"]["longitude"]
+        planets["Ketu"] = {
+            "longitude": float((rahu_longitude + 180) % 360),
+            "latitude": float(-planets["Rahu"]["latitude"]),
+            "distance_au": float(planets["Rahu"]["distance_au"]),
+            "longitude_speed_deg_per_day": float(planets["Rahu"]["longitude_speed_deg_per_day"]),
+        }
+        cusps, angles = swe.houses_ex(
+            jd_ut, birth.latitude, birth.longitude,
+            settings.house_system.encode("ascii"), swe.FLG_SIDEREAL
+        )
+
+    return {
+        "status": "calculated_unvalidated",
+        "birth_time_utc": birth.birth_time_utc.astimezone(timezone.utc).isoformat(),
+        "coordinates": {"latitude": birth.latitude, "longitude": birth.longitude},
+        "julian_day_ut": jd_ut,
+        "settings": {
+            "sidereal_mode": settings.sidereal_mode,
+            "house_system": settings.house_system,
+            "ruleset_version": settings.ruleset_version,
+            "ephemeris": "Swiss Ephemeris",
+            "ephemeris_version": swe.version,
+        },
+        "planets": planets,
+        "ascendant_longitude": float(angles[0] % 360),
+        "midheaven_longitude": float(angles[1] % 360),
+        "house_cusps": [float(value % 360) for value in cusps],
+        "warnings": [
+            "Numerical output has not yet been validated against agreed reference charts.",
+            "House-system behavior and high-latitude edge cases require dedicated tests.",
+            "Astrological interpretations are not produced by this module.",
+        ],
+    }
