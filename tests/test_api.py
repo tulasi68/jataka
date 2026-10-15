@@ -23,7 +23,8 @@ def test_status_marks_calculations_enabled_but_unvalidated() -> None:
     response = client.get("/api/status")
     assert response.status_code == 200
     assert response.json()["chart_display"] is False
-    assert response.json()["calculations_enabled"] is True\n    assert response.json()["calculation_status"] == "unvalidated"
+    assert response.json()["calculations_enabled"] is True
+    assert response.json()["calculation_status"] == "unvalidated"
     assert response.json()["input_storage"] is False
 
 
