@@ -91,6 +91,7 @@ def _placement_sentence(name: str, planets: Mapping[str, object]) -> str | None:
 
 def _ruler_reading(house: int, asc_index: int, planets: Mapping[str, object]) -> dict[str, object]:
     house_sign = _sign((asc_index + house - 1) % 12)
+    ordinal = {1: "1st", 2: "2nd", 3: "3rd"}.get(house, f"{house}th")
     ruler = SIGN_RULERS[house_sign]
     ruler_item = _map(planets.get(ruler))
     ruler_house = int(ruler_item.get("whole_sign_house", 0) or 0)
@@ -98,7 +99,7 @@ def _ruler_reading(house: int, asc_index: int, planets: Mapping[str, object]) ->
     if ruler_house:
         destination = HOUSE_THEMES[ruler_house]
         ruler_sentence = (
-            f"The {house}th-house sign is {house_sign}, whose traditional ruler is {ruler}. "
+            f"The sign on the {ordinal} house is {house_sign}, whose traditional ruler is {ruler}. "
             f"{ruler} is placed in {ruler_sign}, house {ruler_house}. In this Jyotish framework, "
             f"that connects {HOUSE_THEMES[house]} with {destination}. "
             "This house-ruler connection is the main reason for the interpretation below."
@@ -110,7 +111,7 @@ def _ruler_reading(house: int, asc_index: int, planets: Mapping[str, object]) ->
         }
     else:
         ruler_sentence = (
-            f"The {house}th-house sign is {house_sign}, traditionally ruled by {ruler}, "
+            f"The sign on the {ordinal} house is {house_sign}, traditionally ruled by {ruler}, "
             "but the ruler's placement is unavailable, so this report does not infer a house-to-house link."
         )
         link = {"house": house, "house_sign": house_sign, "ruler": ruler, "ruler_house": None}
