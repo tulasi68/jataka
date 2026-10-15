@@ -48,7 +48,10 @@ def test_chara_karaka_seven_and_eight_modes_are_explicit() -> None:
     assert len(eight["rankings"]) == 8
     assert "Rahu" not in {p["planet"] for p in seven["rankings"]}
     assert "Rahu" in {p["planet"] for p in eight["rankings"]}
-    assert eight["rankings"][0]["planet"] == "Rahu"
+    rahu = next(p for p in eight["rankings"] if p["planet"] == "Rahu")
+    moon = next(p for p in eight["rankings"] if p["planet"] == "Moon")
+    assert rahu["karaka_degree"] == 10.0  # Rahu uses the reversed within-sign degree
+    assert moon["karaka_degree"] > rahu["karaka_degree"]
 
 
 def test_chara_karaka_rejects_implicit_variant_conflict() -> None:
