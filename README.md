@@ -2,7 +2,7 @@
 
 Jataka is a modular research and software project for implementing a South Indian Vedic astrology calculation engine using clearly documented conventions. The proposed design combines three calculation passes and a deterministic consensus layer. Any future language-model interpretation will remain separate from calculation results.
 
-**Status: active prototype; calculation accuracy is not yet validated.** The guided interface now displays a South Indian Rāśi chart, derived sign/house/Nakshatra/pada/Navāṃśa factors, a Vimśottarī Mahādaśā sequence, explicit 7- and 8-karaka Chara Kāraka variants, and a cautious personal reflection report. All derived factors inherit the unvalidated source longitudes. Arūḍha Padas, Ashtakavarga, transit analysis, and independent reference-chart validation remain outstanding.
+**Status: active prototype; calculation accuracy is not yet validated.** The guided interface now displays a South Indian Rāśi chart, derived sign/house/Nakshatra/pada/Navāṃśa factors, a Vimśottarī Mahādaśā sequence, explicit 7- and 8-karaka Chara Kāraka variants, and a cautious personal reflection report. All derived factors inherit the unvalidated source longitudes. Arūḍha Padas, Ashtakavarga, and sign-based transit scoring are now implemented, but their rule variants and outputs remain unvalidated. Genuine independent three-pass verification and reference-chart validation remain outstanding.
 
 ## Product principle
 
@@ -42,7 +42,7 @@ The package uses a src layout. Install it with pip install -e . before running t
 
 ## Interactive prototype
 
-The browser interface asks for birth details one step at a time, validates each response, allows back-navigation and correction, and provides an explicit birthplace search using Open-Meteo's geocoding API. The user selects a matching place; coordinates and a suggested IANA time zone are then displayed for confirmation. The guided interface submits confirmed birth details to the FastAPI calculation endpoint. On success, it displays raw planetary longitudes, a South Indian Rāśi chart, derived factors, Vimśottarī periods, Chara Kāraka variants, and a printable personal reflection report. All astronomical and derived outputs remain prominently unvalidated. On Cloudflare Pages, `/api/calculate` proxies to the separately hosted Python service when `JATAKA_ENGINE_URL` is configured; unless both `JATAKA_ENGINE_URL` and the matching secret `JATAKA_ENGINE_TOKEN` are configured, it fails safely and performs no calculation. The proxy sends the token only from the server-side Pages function; it is not exposed to browser JavaScript. There is no account system or server-side storage of entered birth details.
+The browser interface asks for birth details one step at a time, validates each response, allows back-navigation and correction, and provides an explicit birthplace search using Open-Meteo's geocoding API. The user selects a matching place; coordinates and a suggested IANA time zone are then displayed for confirmation. The guided interface submits confirmed birth details to the FastAPI calculation endpoint. On success, it displays raw planetary longitudes, a South Indian Rāśi chart, derived factors, Vimśottarī periods, Chara Kāraka and Arūḍha factors, Ashtakavarga and transit sign scores, and a printable personal reflection report. Optional name numerology and user-recorded palmistry reflections can be included. All astronomical and derived outputs remain prominently unvalidated. On Cloudflare Pages, `/api/calculate` proxies to the separately hosted Python service when `JATAKA_ENGINE_URL` is configured; unless both `JATAKA_ENGINE_URL` and the matching secret `JATAKA_ENGINE_TOKEN` are configured, it fails safely and performs no calculation. The proxy sends the token only from the server-side Pages function; it is not exposed to browser JavaScript. There is no account system or server-side storage of entered birth details.
 
 ## Hosted prototype
 
@@ -86,3 +86,11 @@ The first Swiss Ephemeris module is an engineering foundation, not a claim of as
 - **Consensus matrix:** generic deterministic aggregation utility exists; domain-specific evidence and weights are not yet integrated into the user report.
 - **Validation:** not complete. Do not remove the UNVALIDATED labels until independently sourced reference charts, tolerances, and edge cases have been checked.
 
+
+
+## Remaining implementation and validation
+
+- The three traditional analysis passes are implemented, but they share the same natal astronomical positions. The UI deliberately says **source independence not established**; this is not yet independent three-pass verification.
+- Numerology calculates common Pythagorean and Chaldean name totals plus explicitly labelled birth-date reductions. It is optional and culturally interpretive.
+- Palmistry currently accepts observations selected by the user. It does not upload or analyse palm photos; its output is folklore-based reflection, not a prediction.
+- Next release gate: add independently sourced reference charts and tolerance tests for astronomical positions, validate rule variants, review API/UI behaviour, and only then consider a production label. No output is represented as a guaranteed prediction.
