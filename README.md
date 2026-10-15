@@ -49,3 +49,17 @@ The package uses a src layout. Install it with pip install -e . before running t
 - This project is not a substitute for professional, medical, financial, or legal advice.
 
 See docs/PHASE1_CONCEPT.md, docs/CALCULATION_CONVENTIONS.md, and docs/INTERACTION_AND_TRUST.md.
+
+
+## Interactive prototype
+
+The browser interface is served at `/` by FastAPI. It asks for birth details one step at a time, validates each response, allows back-navigation and correction, and offers a reviewed-input JSON export. The first version deliberately has no chart display, no horoscope calculations, no account system, and no server-side storage of entered details.
+
+Run locally:
+
+    pip install -e ".[dev]"
+    uvicorn jataka.api:app --reload
+
+Open http://127.0.0.1:8000. The health endpoint is `/health`; prototype capability status is `/api/status`.
+
+This is an early prototype, not a production deployment. Its validation checks input format and ranges, not the correctness of astrological interpretations. Birthplace geocoding and calculation conventions remain unresolved.
