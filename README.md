@@ -2,7 +2,7 @@
 
 Jataka is a modular research and software project for implementing a South Indian Vedic astrology calculation engine using clearly documented conventions. The proposed design combines three calculation passes and a deterministic consensus layer. Any future language-model interpretation will remain separate from calculation results.
 
-**Status: initial scaffold.** This repository does not yet provide a complete or validated astrology calculator. Calculation modules identify unfinished work rather than inventing results.
+**Status: early implementation.** Jataka now includes explicit local-birth-time-to-UTC conversion and a first Swiss Ephemeris numerical pass for sidereal planetary longitudes and house cusps. These outputs are marked unvalidated and are not yet connected to the guided web interface. The project is not a complete or validated astrology calculator.
 
 ## Product principle
 
@@ -19,7 +19,7 @@ Jataka is a modular research and software project for implementing a South India
 
 ## Architecture
 
-- src/jataka/parashari_engine.py — Parāśari/Drik calculation boundary.
+- src/jataka/birth_time.py — local civil birth time to UTC conversion with DST ambiguity checks.\n- src/jataka/parashari_engine.py — first Swiss Ephemeris pass for planetary longitudes and house cusps; explicit settings required.
 - src/jataka/jaimini_engine.py — Jaimini factor boundary.
 - src/jataka/ashtakavarga_engine.py — Ashtakavarga and transit boundary.
 - src/jataka/consensus.py — deterministic evidence aggregation.
@@ -42,7 +42,7 @@ The package uses a src layout. Install it with pip install -e . before running t
 
 ## Interactive prototype
 
-The browser interface asks for birth details one step at a time, validates each response, allows back-navigation and correction, and provides an explicit birthplace search using Open-Meteo's geocoding API. The user selects a matching place; coordinates and a suggested IANA time zone are then displayed for confirmation. The first version deliberately has no chart display, no horoscope calculations, no account system, and no server-side storage of entered details.
+The browser interface asks for birth details one step at a time, validates each response, allows back-navigation and correction, and provides an explicit birthplace search using Open-Meteo's geocoding API. The user selects a matching place; coordinates and a suggested IANA time zone are then displayed for confirmation. The guided interface deliberately has no chart display and does not yet call the numerical engine. There is no account system or server-side storage of entered birth details.
 
 ## Hosted prototype
 
@@ -66,3 +66,11 @@ This is an early prototype, not a validated astrology calculator. Birthplace loo
 - This project is not a substitute for professional, medical, financial, or legal advice.
 
 See docs/PHASE1_CONCEPT.md, docs/CALCULATION_CONVENTIONS.md, and docs/INTERACTION_AND_TRUST.md.
+
+## License
+
+Jataka is licensed under the GNU Affero General Public License, version 3 or (at your option) any later version. See [LICENSE](LICENSE). Because the application is offered over a network, the running interface links to the corresponding public source. Swiss Ephemeris is dual-licensed; this project chooses its AGPL option. Preserve upstream notices and review the upstream [license](https://github.com/aloistr/swisseph/blob/master/LICENSE) before redistributing components.
+
+## Calculation status
+
+The first Swiss Ephemeris module is an engineering foundation, not a claim of astrological correctness. Its output includes the selected sidereal mode, house system, library version and explicit warnings. Reference-chart validation, edge-case testing, documented convention choices, and integration with the guided interface are still required before calculations should be presented to users as validated.
