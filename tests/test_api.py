@@ -64,7 +64,11 @@ def test_calculate_endpoint_returns_unvalidated_lahiri_positions():
     assert result["verification"]["ready_to_label_verified"] is False
     assert result["multi_pass_outlook"]["status"] == "MULTI_PASS_TRADITIONAL_OUTLOOK_UNVALIDATED"
     assert len(result["multi_pass_outlook"]["passes"]) == 3
-    assert result["common_reading"]["status"] == "PLAIN_LANGUAGE_TRADITIONAL_INTERPRETATION_UNVALIDATED"
+    assert result["common_reading"]["status"] == "PERSONALISED_EVIDENCE_LED_INTERPRETATION_UNVALIDATED"
+    assert len(result["common_reading"]["main_takeaways"]) >= 2
+    assert len(result["common_reading"]["area_readings"]) == 6
+    assert all(area["reasoning"] and area["ruler_link"]["house_sign"] for area in result["common_reading"]["area_readings"])
+    assert any("ruler" in area["reasoning"].lower() for area in result["common_reading"]["area_readings"])
     assert len(result["common_reading"]["life_areas"]) >= 5
     assert "not independent verification" in result["common_reading"]["how_methods_fit"]["text"].lower()
     assert result["common_reading"]["limitations"]
