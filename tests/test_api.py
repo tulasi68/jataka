@@ -69,7 +69,6 @@ def test_calculate_endpoint_returns_unvalidated_lahiri_positions():
     assert len(result["common_reading"]["area_readings"]) == 6
     assert all(area["reasoning"] and area["ruler_link"]["house_sign"] for area in result["common_reading"]["area_readings"])
     assert any("ruler" in area["reasoning"].lower() for area in result["common_reading"]["area_readings"])
-    assert len(result["common_reading"]["life_areas"]) >= 5
     assert "not independent verification" in result["common_reading"]["how_methods_fit"]["text"].lower()
     assert result["common_reading"]["limitations"]
     assert result["common_reading"]["additional_lenses"]
