@@ -19,7 +19,8 @@ Jataka is a modular research and software project for implementing a South India
 
 ## Architecture
 
-- src/jataka/birth_time.py — local civil birth time to UTC conversion with DST ambiguity checks.\n- src/jataka/parashari_engine.py — first Swiss Ephemeris pass for planetary longitudes and house cusps; explicit settings required.
+- src/jataka/birth_time.py — local civil birth time to UTC conversion with DST ambiguity checks.
+- src/jataka/parashari_engine.py — first Swiss Ephemeris pass for planetary longitudes and house cusps; explicit settings required.
 - src/jataka/jaimini_engine.py — Jaimini factor boundary.
 - src/jataka/ashtakavarga_engine.py — Ashtakavarga and transit boundary.
 - src/jataka/consensus.py — deterministic evidence aggregation.
@@ -59,7 +60,8 @@ This is an early prototype, not a validated astrology calculator. Birthplace loo
 ## Important conventions and limits
 
 - Birth date/time must be interpreted in the birth location's time zone; never silently assume the machine's local zone.
-- The initial ayanāṃśa standard is Lahiri (Chitrapaksha); any alternative mode must be explicitly selected and recorded.\n- Astronomical calculation settings, including Swiss Ephemeris version, sidereal mode/ayanāṃśa, house system, and coordinates, must be recorded with outputs.
+- The initial ayanāṃśa standard is Lahiri (Chitrapaksha); any alternative mode must be explicitly selected and recorded.
+- Astronomical calculation settings, including Swiss Ephemeris version, sidereal mode/ayanāṃśa, house system, and coordinates, must be recorded with outputs.
 - Parāśari, Jaimini, and Ashtakavarga outputs remain separate evidence streams.
 - Consensus scores are software bookkeeping, not a measure of scientific truth or predictive accuracy.
 - Any AI-generated explanation must be presented as interpretation, not as a source of planetary positions or other calculated facts.
