@@ -68,7 +68,6 @@ def _plain_placement(name: str, placement: Mapping[str, object]) -> dict[str, ob
         "plain_language": (
             f"In traditional Jyotish, {name} is associated with {planet_theme}. "
             f"Placed in the {ordinal} house, it is traditionally discussed in connection with {topic}. "
-            f"house, it is traditionally discussed in connection with {topic}. "
             "Use this as a question to reflect on your own experience, not as a statement "
             "that this trait or outcome must apply to you."
         ) if house else (
