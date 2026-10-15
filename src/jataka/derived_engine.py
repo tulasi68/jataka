@@ -175,7 +175,7 @@ def calculate_jaimini_chara_karakas(
              "Putrakaraka", "Gnatikaraka", "Darakaraka")
     if karaka_count == 8:
         roles = ("Atmakaraka", "Amatyakaraka", "Bhratrikaraka", "Matrikaraka",
-                 "Putrakaraka", "Gnatikaraka", "Darakaraka", "Pitru/Matru variant")
+                 "Pitṛkāraka", "Putrakāraka", "Gnātikāraka", "Dārakāraka")
     for index, item in enumerate(ranked):
         item["rank"] = index + 1
         item["role"] = roles[index]
