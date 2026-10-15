@@ -25,3 +25,20 @@ def test_status_is_clear_that_calculations_are_disabled() -> None:
     assert response.json()["chart_display"] is False
     assert response.json()["calculations_enabled"] is False
     assert response.json()["input_storage"] is False
+
+
+# Engine smoke checks are kept beside the API checks until the suite is reorganized.
+from datetime import datetime, timezone
+import pytest
+from jataka.parashari_engine import BirthData, CalculationSettings, calculate_chart
+
+def test_swiss_ephemeris_returns_positions():
+    birth = BirthData(datetime(2000, 1, 1, 12, tzinfo=timezone.utc), 13.0827, 80.2707)
+    result = calculate_chart(birth, CalculationSettings(sidereal_mode='lahiri', house_system='W'))
+    assert result['status'] == 'calculated_unvalidated'
+    assert len(result['house_cusps']) == 12
+    assert set(result['planets']) == {'Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Rahu','Ketu'}
+
+def test_engine_requires_explicit_sidereal_mode():
+    with pytest.raises(ValueError, match='sidereal_mode'):
+        CalculationSettings(sidereal_mode='', house_system='W')
