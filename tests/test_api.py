@@ -57,6 +57,7 @@ def test_calculate_endpoint_returns_unvalidated_lahiri_positions():
     assert result["derived_factors"]["status"] == "DERIVED_UNVALIDATED"
     assert result["derived_factors"]["ascendant"]["sign"] in {"Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"}
     assert len(result["derived_factors"]["vimshottari"]["periods"]) == 9
+    assert result["personal_report"]["status"] == "INTERPRETIVE_REFLECTION_NOT_PREDICTION"
 
 def test_calculate_endpoint_rejects_invalid_timezone():
     response = client.post("/api/calculate", json={"birth_date":"2000-01-01","birth_time":"12:00","time_zone":"Not/A_Real_Zone","latitude":13.0827,"longitude":80.2707})
