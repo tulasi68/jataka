@@ -73,4 +73,4 @@ Jataka is licensed under the GNU Affero General Public License, version 3 or (at
 
 ## Calculation status
 
-The first Swiss Ephemeris module is an engineering foundation, not a claim of astrological correctness. Its output includes the selected sidereal mode, house system, library version and explicit warnings. Reference-chart validation, edge-case testing, documented convention choices, independent reference-chart validation is still required before calculations should be presented as validated. The interface integration does not change this status.
+The first Swiss Ephemeris module is an engineering foundation, not a claim of astrological correctness. Its output includes the selected sidereal mode, house system, library version and explicit warnings. Independent reference-chart validation, edge-case testing, and documented convention choices are still required before calculations should be presented as validated. The interface integration does not change this status.
