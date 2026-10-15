@@ -58,6 +58,11 @@ def test_calculate_endpoint_returns_unvalidated_lahiri_positions():
     assert result["derived_factors"]["ascendant"]["sign"] in {"Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"}
     assert len(result["derived_factors"]["vimshottari"]["periods"]) == 9
     assert result["personal_report"]["status"] == "INTERPRETIVE_REFLECTION_NOT_PREDICTION"
+    assert result["ashtakavarga"]["sarvashtakavarga"]["total"] == 337
+    assert len(result["transit_analysis"]["transits"]) == 7
+    assert result["verification"]["status"] == "INCOMPLETE_SOURCE_INDEPENDENCE_NOT_ESTABLISHED"
+    assert result["verification"]["ready_to_label_verified"] is False
+    assert "arudha_padas" in result["derived_factors"]["jaimini"]
 
 def test_calculate_endpoint_rejects_invalid_timezone():
     response = client.post("/api/calculate", json={"birth_date":"2000-01-01","birth_time":"12:00","time_zone":"Not/A_Real_Zone","latitude":13.0827,"longitude":80.2707})
@@ -79,3 +84,28 @@ def test_calculate_endpoint_requires_configured_engine_token(monkeypatch):
     assert denied.status_code == 401
     accepted = client.post("/api/calculate", json=payload, headers={"X-Jataka-Engine-Token":"test-secret"})
     assert accepted.status_code == 200
+
+
+
+def test_calculate_endpoint_optional_numerology_and_palmistry():
+    payload = {
+        "birth_date": "2000-01-01",
+        "birth_time": "12:00",
+        "time_zone": "Asia/Kolkata",
+        "latitude": 13.0827,
+        "longitude": 80.2707,
+        "full_name": "Ada Lovelace",
+        "palmistry_hand": "both",
+        "palmistry_observations": {
+            "heart_line": "curved",
+            "head_line": "straight",
+            "life_line": "wide_arc",
+            "fate_line": "uncertain",
+        },
+    }
+    response = client.post("/api/calculate", json=payload)
+    assert response.status_code == 200
+    result = response.json()
+    assert result["numerology"]["status"] == "NUMEROLOGY_COMPUTED_UNVALIDATED"
+    assert result["palmistry"]["status"] == "PALMISTRY_REFLECTION_USER_RECORDED"
+    assert result["palmistry"]["hand"] == "both"
