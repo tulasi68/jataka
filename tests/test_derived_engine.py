@@ -18,7 +18,7 @@ def test_sign_nakshatra_pada_and_navamsa_boundaries() -> None:
     assert describe_longitude(30)["sign"] == "Taurus"
     assert describe_longitude(13 + 20 / 60)["nakshatra"] == "Bharani"
     assert describe_longitude(30 - 1e-7)["sign"] == "Aries"
-    assert describe_longitude(30 - 1e-7)["navamsa_sign"] == "Pisces"
+    assert describe_longitude(30 - 1e-7)["navamsa_sign"] == "Sagittarius"
 
 
 def test_nakshatra_span_is_exactly_one_twenty_seventh_of_circle() -> None:
