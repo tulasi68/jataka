@@ -181,45 +181,63 @@ def build_common_reading(
     if lagna_lord and _map(planets.get(lagna_lord)):
         p = _map(planets.get(lagna_lord))
         house = int(p.get("whole_sign_house", 0) or 0)
+        ordinal = {1: "1st", 2: "2nd", 3: "3rd"}.get(house, f"{house}th")
         anchors.append({
-            "title": "The chart's starting point",
-            "finding": f"The ascendant is {asc_sign}; its traditional ruler is {lagna_lord}.",
+            "title": "Where your chart begins — the Ascendant",
+            "finding": (
+                f"Your Ascendant (Lagna) is {asc_sign}, so the whole chart is counted from "
+                f"{asc_sign}. Its traditional ruler is {lagna_lord}."
+            ),
             "meaning": (
-                f"{lagna_lord} is in {p.get('sign', 'an unavailable sign')}, house {house}. "
-                f"The {lagna_lord} symbolically relates to {PLANET_THEMES.get(lagna_lord, 'its traditional themes')}, "
-                f"while house {house} relates to {HOUSE_THEMES.get(house, 'a life area')}. "
-                "In this tradition, the ascendant ruler's placement is used as a central organising theme, "
-                "not as a complete description of your personality."
+                f"The Ascendant is the starting point of a Jyotish chart: every whole-sign house "
+                f"is counted from it. Because your rising sign is {asc_sign}, the tradition reads "
+                f"the rest of the chart through that lens, and {lagna_lord} — the ruler of "
+                f"{asc_sign} — becomes the chart's central reference planet. "
+                f"In your chart {lagna_lord} sits in {p.get('sign', 'an unavailable sign')}, in the "
+                f"{ordinal} house. The tradition associates {lagna_lord} with "
+                f"{PLANET_THEMES.get(lagna_lord, 'its planetary themes')}, and the {ordinal} house "
+                f"with {HOUSE_THEMES.get(house, 'a life area')}. Read together, this placement is "
+                "a recurring theme for how you meet life — an interpretive lens, not a fixed "
+                "description of your personality."
             ),
             "evidence": {"ascendant_sign": asc_sign, "ascendant_ruler": lagna_lord,
                          "ruler_sign": p.get("sign"), "ruler_house": house},
         })
     if moon:
         mhouse = int(moon.get("whole_sign_house", 0) or 0)
+        mord = {1: "1st", 2: "2nd", 3: "3rd"}.get(mhouse, f"{mhouse}th")
         anchors.append({
-            "title": "The Moon's specific place in the chart",
-            "finding": f"Moon in {moon.get('sign', 'unknown')}, house {mhouse}.",
+            "title": "What the Moon emphasises",
+            "finding": (
+                f"Your Moon is in {moon.get('sign', 'an unknown sign')}, in the {mord} house "
+                f"({moon.get('nakshatra', 'nakshatra unavailable')}, pada "
+                f"{moon.get('pada', '?')})."
+            ),
             "meaning": (
-                f"The Moon is traditionally read for habits, felt security, and day-to-day responses. "
-                f"Here it is in {moon.get('sign', 'an unknown sign')} "
-                f"({SIGN_REFLECTIONS.get(str(moon.get('sign')), 'traditional sign symbolism')}) "
-                f"and house {mhouse} ({HOUSE_THEMES.get(mhouse, 'a life area')}). "
-                f"The chart-specific combination therefore connects these themes with "
-                f"{HOUSE_THEMES.get(mhouse, 'that life area')}; it does not tell us how you actually feel."
+                f"In Jyotish the Moon is read for habits, felt security, and day-to-day responses. "
+                f"Yours is in {moon.get('sign', 'an unknown sign')} — a sign the tradition links "
+                f"with {SIGN_REFLECTIONS.get(str(moon.get('sign')), 'its symbolic themes')} — and "
+                f"in the {mord} house, which the tradition links with "
+                f"{HOUSE_THEMES.get(mhouse, 'a life area')}. The chart-specific point is the "
+                "combination: these two symbolic sets are read together here. It is a prompt for "
+                "reflection, not a measurement of how you actually feel."
             ),
             "evidence": {"planet": "Moon", "sign": moon.get("sign"), "house": mhouse,
                          "nakshatra": moon.get("nakshatra"), "pada": moon.get("pada")},
         })
     if sun:
         shouse = int(sun.get("whole_sign_house", 0) or 0)
+        sord = {1: "1st", 2: "2nd", 3: "3rd"}.get(shouse, f"{shouse}th")
         anchors.append({
-            "title": "Purpose and responsibility",
-            "finding": f"Sun in {sun.get('sign', 'unknown')}, house {shouse}.",
+            "title": "Purpose and visibility",
+            "finding": f"Your Sun is in {sun.get('sign', 'an unknown sign')}, in the {sord} house.",
             "meaning": (
                 f"The Sun is traditionally associated with purpose, visibility, and responsibility. "
-                f"In this chart it is in {sun.get('sign', 'an unknown sign')} and house {shouse}, "
-                f"linking those symbols with {HOUSE_THEMES.get(shouse, 'a life area')}. "
-                "This is a symbolic emphasis, not proof of status, authority, or career outcome."
+                f"In your chart it is in {sun.get('sign', 'an unknown sign')} — a sign the tradition "
+                f"links with {SIGN_REFLECTIONS.get(str(sun.get('sign')), 'its symbolic themes')} — "
+                f"and in the {sord} house, which the tradition links with "
+                f"{HOUSE_THEMES.get(shouse, 'a life area')}. This is a symbolic emphasis in the "
+                "reading, not evidence of status, authority, or career outcome."
             ),
             "evidence": {"planet": "Sun", "sign": sun.get("sign"), "house": shouse},
         })
