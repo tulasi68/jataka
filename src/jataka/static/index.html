@@ -69,8 +69,9 @@ function renderQASection(){
     "What does this chart say about relationships?",
     "What about career and work?",
     "What does the tradition say about money?",
-    "What do the periods say about my present and future?",
-    "What does the chart say about my past?"
+    "What does the chart say about my past?",
+    "What about my present situation?",
+    "What does the tradition say about the future?"
   ];
   return '<section class="reading-section" id="qaSection"><h3>Ask about this chart</h3>'
     +'<p>Ask about a life area, or about the past, present and future periods shown by the Vimśottarī timeline. Jataka answers from the chart factors the tradition uses for that topic and shows the evidence it used. It does not predict events.</p>'
@@ -92,14 +93,22 @@ function renderQAAnswer(a){
   const t=a.timeline;
   let timelineHtml='';
   if(t){
-    const row=p=>'<tr><td>'+esc(p.label)+'</td><td>'+esc(p.lord)+'</td><td>'+esc(String(p.start_utc||'').slice(0,10))+'</td><td>'+esc(String(p.end_utc||'').slice(0,10))+'</td><td>'+esc(p.themes||'')+'</td></tr>';
+    const row=p=>{
+      const startLabel = p.clamped_at_birth ? 'From birth' : esc(String(p.start_utc||'').slice(0,10));
+      return '<tr><td>'+esc(p.label)+'</td><td>'+esc(p.lord)+'</td><td>'+startLabel+'</td><td>'+esc(String(p.end_utc||'').slice(0,10))+'</td><td>'+esc(p.themes||'')+'</td></tr>';
+    };
     const rows=(t.past||[]).map(row).join('')+(t.current?row(t.current):'')+(t.future||[]).map(row).join('');
-    timelineHtml='<article class="reading-section"><h4>Vimśottarī timeline</h4><p>'+esc(t.plain_language||'')+'</p>'
-      +(rows?'<div style="overflow-x:auto"><table class="placement-table"><thead><tr><th>Period</th><th>Lord</th><th>Start UTC</th><th>End UTC</th><th>Traditional themes</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'')
+    const focusLabels=(t.requested||[]).join(' and ');
+    timelineHtml='<article class="reading-section"><h4>Vimśottarī timeline'+(focusLabels?' — showing '+esc(focusLabels):'')+'</h4><p>'+esc(t.plain_language||'')+'</p>'
+      +(rows?'<div style="overflow-x:auto"><table class="placement-table"><thead><tr><th>Period</th><th>Lord</th><th>Start</th><th>End</th><th>Traditional themes</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'')
       +'</article>';
   }
-  return '<div class="notice"><p><strong>Question:</strong> '+esc(a.question||'')+'</p><p><strong>Matched topics:</strong> '+esc((a.matched_topics||[]).join(', ')||'general overview')+'</p></div>'
-    +sections+timelineHtml
+  const topicsLabel=(a.matched_topics||[]).length ? esc(a.matched_topics.join(', ')) : 'timing question — timeline only';
+  const noSections=!(a.answer_sections||[]).length
+    ? '<p class="hint">You asked about timing, so the answer below shows only the Vimśottarī timeline. Ask about a life area (relationships, career, money, home, education, health, spirituality) to also get a chart-factor reading.</p>'
+    : '';
+  return '<div class="notice"><p><strong>Question:</strong> '+esc(a.question||'')+'</p><p><strong>Matched topics:</strong> '+topicsLabel+'</p></div>'
+    +noSections+sections+timelineHtml
     +'<p class="hint">'+esc(a.scope_note||'')+'</p><p class="hint">'+esc(a.disclaimer||'')+'</p>';
 }
 
