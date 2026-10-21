@@ -22,6 +22,7 @@ from jataka.verification import PassEvidence, verify_three_passes
 from jataka.ashtakavarga_engine import calculate_ashtakavarga, calculate_transit_triggers
 from jataka.forecast_engine import build_multi_pass_outlook
 from jataka.interpretation_engine import build_common_reading
+from jataka.qa_engine import answer_question
 
 INDEX_FILE = Path(__file__).resolve().parent / "static" / "index.html"
 app = FastAPI(
@@ -51,6 +52,17 @@ class CalculationRequest(BaseModel):
     full_name: str | None = Field(default=None, max_length=200)
     palmistry_hand: Literal["dominant", "non_dominant", "both"] = "dominant"
     palmistry_observations: dict[str, str] | None = None
+
+
+class QuestionRequest(BaseModel):
+    birth_date: date
+    birth_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    time_zone: str = Field(min_length=1, max_length=100)
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    sidereal_mode: Literal["lahiri"] = "lahiri"
+    house_system: Literal["W"] = "W"
+    question: str = Field(min_length=2, max_length=500)
 
 
 @app.get("/health")
@@ -202,3 +214,47 @@ def calculate(
         "Input details are processed for this request and are not persisted by this API.",
     ]
     return result
+
+
+@app.post("/api/ask")
+def ask(
+    request: QuestionRequest,
+    x_jataka_engine_token: str | None = Header(default=None),
+) -> dict[str, object]:
+    """Answer a question from the chart's traditional factors (no event prediction)."""
+    expected_token = os.getenv("JATAKA_ENGINE_TOKEN")
+    if expected_token and not secrets.compare_digest(x_jataka_engine_token or "", expected_token):
+        raise HTTPException(status_code=401, detail="Invalid or missing calculation-service token.")
+    try:
+        ZoneInfo(request.time_zone)
+        local_moment = datetime.combine(request.birth_date, time.fromisoformat(request.birth_time))
+        utc_moment = local_birth_time_to_utc(local_moment, request.time_zone)
+        birth = BirthData(
+            birth_time_utc=utc_moment,
+            latitude=request.latitude,
+            longitude=request.longitude,
+        )
+        chart = calculate_chart(
+            birth,
+            CalculationSettings(
+                sidereal_mode=request.sidereal_mode,
+                house_system=request.house_system,
+            ),
+        )
+        derived = derive_chart_factors(
+            chart["planets"], chart["ascendant_longitude"], utc_moment
+        )
+        derived["jaimini"] = calculate_jaimini_factors(
+            {name: float(item["longitude"]) for name, item in chart["planets"].items()},
+            JaiminiSettings(chara_karaka_count=7, include_rahu=False),
+        )
+        answer = answer_question(request.question, derived)
+    except (ZoneInfoNotFoundError, ValueError, BirthTimeError, CalculationError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    answer["birth_details"] = {
+        "birth_date": request.birth_date.isoformat(),
+        "birth_time_local": request.birth_time,
+        "time_zone": request.time_zone,
+    }
+    return answer
