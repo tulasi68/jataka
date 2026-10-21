@@ -136,3 +136,39 @@ def test_reflection_endpoint_works_without_birth_time():
     assert "numerology" in result
     assert "palmistry" in result
     assert "derived_factors" not in result
+
+
+def test_ask_endpoint_answers_relationship_question():
+    response = client.post("/api/ask", json={
+        "birth_date": "2000-01-01", "birth_time": "12:00",
+        "time_zone": "Asia/Kolkata", "latitude": 13.0827, "longitude": 80.2707,
+        "question": "What does this chart say about relationships?",
+    })
+    assert response.status_code == 200
+    result = response.json()
+    assert result["status"] == "TRADITIONAL_QA_UNVALIDATED"
+    assert "relationships" in result["matched_topics"]
+    assert result["answer_sections"]
+    assert result["scope_note"]
+    assert result["disclaimer"]
+
+
+def test_ask_endpoint_returns_timeline_for_time_question():
+    response = client.post("/api/ask", json={
+        "birth_date": "2000-01-01", "birth_time": "12:00",
+        "time_zone": "Asia/Kolkata", "latitude": 13.0827, "longitude": 80.2707,
+        "question": "What do the periods say about my present and future?",
+    })
+    assert response.status_code == 200
+    result = response.json()
+    assert result["timeline"] is not None
+    assert "present" in result["timeline"]["requested"]
+
+
+def test_ask_endpoint_rejects_invalid_timezone():
+    response = client.post("/api/ask", json={
+        "birth_date": "2000-01-01", "birth_time": "12:00",
+        "time_zone": "Not/A_Real_Zone", "latitude": 13.0827, "longitude": 80.2707,
+        "question": "What about career?",
+    })
+    assert response.status_code == 422
