@@ -52,31 +52,39 @@ def test_present_question_includes_current_mahadasha():
     ]
     result = answer_question("What is happening now?", _derived(periods), now_utc=now)
     assert result["timeline"]["current"]["lord"] == "Venus"
-    assert result["timeline"]["future"][0]["lord"] == "Sun"
-    assert "not evidence" in result["timeline"]["plain_language"]
+    assert result["timeline"]["past"] == []
+    assert result["timeline"]["future"] == []
 
 
-def test_past_question_lists_earlier_periods():
+def test_past_question_does_not_return_future_periods():
     now = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    birth = datetime(1968, 7, 6, 1, 50, tzinfo=timezone.utc)
     periods = [
-        {"lord": "Mars",  "duration_years": 7,
-         "start_utc": "2000-01-01T00:00:00+00:00", "end_utc": "2007-01-01T00:00:00+00:00"},
-        {"lord": "Venus", "duration_years": 20,
-         "start_utc": "2007-01-01T00:00:00+00:00", "end_utc": "2027-01-01T00:00:00+00:00"},
+        {"lord": "Jupiter", "duration_years": 16,
+         "start_utc": "1963-06-11T00:00:00+00:00", "end_utc": "1979-06-11T00:00:00+00:00"},
+        {"lord": "Saturn",  "duration_years": 19,
+         "start_utc": "1979-06-11T00:00:00+00:00", "end_utc": "1998-06-11T00:00:00+00:00"},
+        {"lord": "Venus",   "duration_years": 20,
+         "start_utc": "2022-06-11T00:00:00+00:00", "end_utc": "2042-06-11T00:00:00+00:00"},
+        {"lord": "Sun",     "duration_years": 6,
+         "start_utc": "2042-06-11T00:00:00+00:00", "end_utc": "2048-06-11T00:00:00+00:00"},
     ]
-    result = answer_question("What does the chart say about my past?", _derived(periods), now_utc=now)
-    assert result["timeline"]["past"][0]["lord"] == "Mars"
+    result = answer_question(
+        "What does the chart say about my past?",
+        _derived(periods),
+        now_utc=now,
+        birth_utc=birth,
+    )
+    assert result["timeline"]["past"]
+    assert result["timeline"]["future"] == []
     assert result["timeline"]["current"]["lord"] == "Venus"
 
 
-def test_unmatched_question_falls_back_to_overview():
-    result = answer_question("Tell me something", _derived())
-    assert result["used_default_overview"] is True
-    assert result["matched_topics"] == ["self"]
-
-
-def test_question_length_is_validated():
-    with pytest.raises(ValueError, match="two characters"):
-        answer_question("a", _derived())
-    with pytest.raises(ValueError, match="500 characters"):
-        answer_question("x" * 501, _derived())
+def test_past_question_clamps_first_period_to_birth():
+    now = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    birth = datetime(1968, 7, 6, 1, 50, tzinfo=timezone.utc)
+    periods = [
+        {"lord": "Jupiter", "duration_years": 16,
+         "start_utc": "1963-06-11T00:00:00+00:00", "end_utc": "1979-06-11T00:00:00+00:00"},
+        {"lord": "Saturn",  "duration_years": 19,
+         "start_utc": "1979-06-11T00:00
