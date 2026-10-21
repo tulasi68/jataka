@@ -160,7 +160,7 @@ async function askQuestion(){
     })});
     const payload=await response.json().catch(()=>({detail:"The calculation service returned an unreadable response."}));
     if(!response.ok)throw new Error(typeof payload.detail==="string"?payload.detail:"Question service unavailable (HTTP "+response.status+").");
-    box.innerHTML=renderQAAnswer(payload);
+    box.innerHTML=renderQAAnswer(_fixTimelineForQuestion(payload, question, s.date));
   }catch(e){
     box.innerHTML='<p class="error">'+esc(e.message||"Please try again.")+'</p>';
   }
