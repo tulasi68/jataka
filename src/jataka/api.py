@@ -248,7 +248,9 @@ def ask(
             {name: float(item["longitude"]) for name, item in chart["planets"].items()},
             JaiminiSettings(chara_karaka_count=7, include_rahu=False),
         )
-        answer = answer_question(request.question, derived)
+        answer = answer_question(
+            request.question, derived, birth_utc=utc_moment,
+        )
     except (ZoneInfoNotFoundError, ValueError, BirthTimeError, CalculationError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
