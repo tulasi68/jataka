@@ -5,6 +5,10 @@ selected Jyotish tradition uses, then reports what the tradition says about the
 relevant factors in this specific chart. It does not predict events, produce
 probabilities, or answer yes/no fate questions. Every answer carries the
 evidence used and an explicit non-prediction scope note.
+
+The Vimśottarī timeline is clamped to the person's life window: past periods
+start at birth (never before), and only the buckets requested (past / present /
+future) are returned. The current period is always included as context.
 """
 from __future__ import annotations
 
@@ -88,11 +92,11 @@ TOPICS = {
 
 TIME_KEYWORDS = {
     "past": ("past", "before", "already", "happened", "used to", "earlier",
-             "previous", "childhood"),
+             "previous", "childhood", "so far", "life so far"),
     "present": ("present", "now", "currently", "today", "this year",
                 "at the moment", "right now"),
     "future": ("future", "will", "later", "upcoming", "next year", "soon",
-               "coming", "ahead"),
+               "coming", "ahead", "next"),
 }
 
 
@@ -160,7 +164,15 @@ def _topic_answer_text(reading: Mapping) -> str:
     return " ".join(parts)
 
 
-def _dasha_timeline(derived: Mapping, now: datetime):
+def _dasha_timeline(derived: Mapping, now: datetime, birth_utc: datetime | None):
+    """Split the Vimśottarī sequence into past / current / future buckets.
+
+    Past periods are clamped to the birth instant, so a birth-balance period
+    that started before birth reports as starting at birth. Periods that end
+    at or before ``now`` go to ``past``; the period containing ``now`` is
+    ``current``; anything starting after ``now`` is ``future``. If ``birth_utc``
+    is supplied, nothing is returned that lies wholly before birth.
+    """
     vim = _map(derived.get("vimshottari"))
     periods = vim.get("periods", []) if isinstance(vim, Mapping) else []
     past, current, future = [], None, []
@@ -170,12 +182,23 @@ def _dasha_timeline(derived: Mapping, now: datetime):
             end = datetime.fromisoformat(str(period["end_utc"]))
         except (KeyError, ValueError):
             continue
+        if birth_utc is not None and end <= birth_utc:
+            continue
+        clamped_start = max(start, birth_utc) if birth_utc is not None else start
+        if clamped_start >= end:
+            continue
+        row = {
+            **period,
+            "start_utc": clamped_start.isoformat(),
+            "end_utc": end.isoformat(),
+            "clamped_at_birth": bool(birth_utc is not None and start < birth_utc),
+        }
         if end <= now:
-            past.append(period)
-        elif start <= now < end:
-            current = period
+            past.append(row)
+        elif clamped_start <= now < end:
+            current = row
         else:
-            future.append(period)
+            future.append(row)
     return past, current, future
 
 
@@ -188,39 +211,74 @@ def _format_period(period: Mapping, label: str) -> dict[str, object]:
         "end_utc": period.get("end_utc"),
         "years": period.get("duration_years"),
         "themes": DASHA_REFLECTIONS.get(lord, "traditional planetary themes"),
+        "clamped_at_birth": bool(period.get("clamped_at_birth", False)),
     }
 
 
-def _timeline_plain_language(focuses, past, current, future) -> str:
+def _timeline_plain_language(
+    focuses, past, current, future, birth_utc: datetime | None = None,
+) -> str:
     parts: list[str] = []
-    if current:
-        parts.append(
-            f"Your current Vimśottarī Mahādaśā is {current.get('lord')}, and the tradition "
-            f"reads that period with themes of {DASHA_REFLECTIONS.get(str(current.get('lord')), 'planetary symbolism')}."
-        )
+    birth_year = birth_utc.year if birth_utc else None
+
     if "past" in focuses and past:
-        parts.append(
-            f"The sequence contains {len(past)} Mahādaśā period(s) before the current one. "
-            "In this tradition they are read as earlier chapters; they are not a record of events."
+        lords = ", ".join(str(p.get("lord")) for p in past)
+        window = (
+            f"from your birth in {birth_year} to today"
+            if birth_year else "up to today"
         )
+        parts.append(
+            f"In the Vimśottarī timeline {window}, you moved through "
+            f"{len(past)} Mahādaśā period(s): {lords}."
+        )
+
+    if current:
+        lord = str(current.get("lord"))
+        themes = DASHA_REFLECTIONS.get(lord, "planetary themes")
+        try:
+            start_y = datetime.fromisoformat(str(current["start_utc"])).year
+            end_y = datetime.fromisoformat(str(current["end_utc"])).year
+            window = f"{start_y}–{end_y}"
+        except (KeyError, ValueError):
+            window = "now"
+        parts.append(
+            f"You are currently in the {lord} Mahādaśā ({window}) — the tradition "
+            f"associates it with {themes}."
+        )
+
     if "future" in focuses and future:
+        lords = ", ".join(str(p.get("lord")) for p in future)
         parts.append(
-            f"The sequence contains {len(future)} Mahādaśā period(s) after the current one. "
-            "The tradition uses these as timing symbolism for reflection, not as a forecast."
+            f"After the current period, the cycle continues with {len(future)} "
+            f"further Mahādaśā period(s): {lords}."
         )
+
+    if "future" in focuses and not future:
+        parts.append("No further Mahādaśā periods were returned in this response.")
+
     parts.append(
-        "Vimśottarī dates and themes are traditional timing symbolism, not evidence that "
-        "particular events occurred or will occur."
+        "Vimśottarī dates and themes are a traditional timing framework. Each period "
+        "has a symbolic theme the tradition assigns to it; the dates are not a record "
+        "of specific events that occurred in that window."
     )
     return " ".join(parts)
 
 
-def answer_question(question: str, derived: Mapping, *, now_utc: datetime | None = None) -> dict[str, object]:
+def answer_question(
+    question: str,
+    derived: Mapping,
+    *,
+    now_utc: datetime | None = None,
+    birth_utc: datetime | None = None,
+) -> dict[str, object]:
     """Answer a free-text question from the chart's computed factors.
 
     The answer is a report of what the selected tradition associates with the
     relevant houses, rulers and dasha periods in this specific chart. It is not
     a prediction, a probability, or a claim about the user's actual life events.
+
+    When ``birth_utc`` is supplied, past dasha periods are clamped to birth and
+    only the requested time buckets (past / present / future) are returned.
     """
     q = (question or "").strip().lower()
     if len(q) < 2:
@@ -229,6 +287,9 @@ def answer_question(question: str, derived: Mapping, *, now_utc: datetime | None
         raise ValueError("Please keep the question to 500 characters or fewer.")
 
     now = (now_utc or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    if birth_utc is not None:
+        birth_utc = birth_utc.astimezone(timezone.utc)
+
     planets = _map(derived.get("planets"))
     asc = _map(derived.get("ascendant"))
     asc_index = int(asc.get("sign_index", 0) or 0)
@@ -254,13 +315,21 @@ def answer_question(question: str, derived: Mapping, *, now_utc: datetime | None
 
     timeline = None
     if time_focuses:
-        past, current, future = _dasha_timeline(derived, now)
+        past, current, future = _dasha_timeline(derived, now, birth_utc)
+        show_past = "past" in time_focuses
+        show_future = "future" in time_focuses
         timeline = {
             "requested": time_focuses,
-            "past": [_format_period(p, "Past") for p in past],
+            "past": [_format_period(p, "Past") for p in past] if show_past else [],
             "current": _format_period(current, "Current") if current else None,
-            "future": [_format_period(p, "Future") for p in future],
-            "plain_language": _timeline_plain_language(time_focuses, past, current, future),
+            "future": [_format_period(p, "Future") for p in future] if show_future else [],
+            "plain_language": _timeline_plain_language(
+                time_focuses,
+                past if show_past else [],
+                current,
+                future if show_future else [],
+                birth_utc,
+            ),
         }
 
     return {
