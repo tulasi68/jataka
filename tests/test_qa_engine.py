@@ -87,4 +87,69 @@ def test_past_question_clamps_first_period_to_birth():
         {"lord": "Jupiter", "duration_years": 16,
          "start_utc": "1963-06-11T00:00:00+00:00", "end_utc": "1979-06-11T00:00:00+00:00"},
         {"lord": "Saturn",  "duration_years": 19,
-         "start_utc": "1979-06-11T00:00
+         "start_utc": "1979-06-11T00:00:00+00:00", "end_utc": "1998-06-11T00:00:00+00:00"},
+        {"lord": "Venus",   "duration_years": 20,
+         "start_utc": "2022-06-11T00:00:00+00:00", "end_utc": "2042-06-11T00:00:00+00:00"},
+    ]
+    result = answer_question(
+        "What does the chart say about my past?",
+        _derived(periods),
+        now_utc=now,
+        birth_utc=birth,
+    )
+    first = result["timeline"]["past"][0]
+    assert first["lord"] == "Jupiter"
+    assert first["clamped_at_birth"] is True
+    assert first["start_utc"].startswith("1968-07-06")
+    assert "from your birth in 1968" in result["timeline"]["plain_language"].lower()
+
+
+def test_future_question_hides_past_periods():
+    now = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    birth = datetime(1968, 7, 6, 1, 50, tzinfo=timezone.utc)
+    periods = [
+        {"lord": "Jupiter", "duration_years": 16,
+         "start_utc": "1963-06-11T00:00:00+00:00", "end_utc": "1979-06-11T00:00:00+00:00"},
+        {"lord": "Sun",     "duration_years": 6,
+         "start_utc": "2030-06-11T00:00:00+00:00", "end_utc": "2036-06-11T00:00:00+00:00"},
+    ]
+    result = answer_question(
+        "What does the future hold?",
+        _derived(periods),
+        now_utc=now,
+        birth_utc=birth,
+    )
+    assert result["timeline"]["past"] == []
+    assert len(result["timeline"]["future"]) == 1
+    assert result["timeline"]["future"][0]["lord"] == "Sun"
+
+
+def test_unmatched_question_falls_back_to_overview():
+    result = answer_question("Tell me something", _derived())
+    assert result["used_default_overview"] is True
+    assert result["matched_topics"] == ["self"]
+
+
+def test_timing_only_question_does_not_force_topic_section():
+    now = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    birth = datetime(1968, 7, 6, 1, 50, tzinfo=timezone.utc)
+    periods = [
+        {"lord": "Venus", "duration_years": 20,
+         "start_utc": "2022-06-11T00:00:00+00:00", "end_utc": "2042-06-11T00:00:00+00:00"},
+    ]
+    result = answer_question(
+        "What does the chart say about my past?",
+        _derived(periods),
+        now_utc=now,
+        birth_utc=birth,
+    )
+    assert result["matched_topics"] == []
+    assert result["answer_sections"] == []
+    assert result["timeline"] is not None
+
+
+def test_question_length_is_validated():
+    with pytest.raises(ValueError, match="two characters"):
+        answer_question("a", _derived())
+    with pytest.raises(ValueError, match="500 characters"):
+        answer_question("x" * 501, _derived())
