@@ -111,7 +111,42 @@ function renderQAAnswer(a){
     +noSections+sections+timelineHtml
     +'<p class="hint">'+esc(a.scope_note||'')+'</p><p class="hint">'+esc(a.disclaimer||'')+'</p>';
 }
-
+function _fixTimelineForQuestion(payload, questionText, birthDateStr){
+  const t = payload && payload.timeline;
+  if (!t) return payload;
+  const q = String(questionText||"").toLowerCase();
+  const askedPast = /(past|before|already|happened|earlier|previous|childhood|so far|life so far)/.test(q);
+  const askedFuture = /(future|later|upcoming|next year|soon|coming|ahead|will )/.test(q);
+  const birth = birthDateStr ? new Date(birthDateStr + "T00:00:00Z") : null;
+  const clampRow = (row) => {
+    if (!row || !birth) return row;
+    const s = new Date(row.start_utc);
+    if (s < birth) return Object.assign({}, row, { start_utc: birth.toISOString(), clamped_at_birth: true });
+    return row;
+  };
+  const pastAll = (t.past || []).map(clampRow);
+  const current = t.current ? clampRow(t.current) : null;
+  const futureAll = (t.future || []).map(clampRow);
+  const past = askedPast ? pastAll : [];
+  const future = askedFuture ? futureAll : [];
+  const parts = [];
+  if (askedPast && past.length) {
+    parts.push("In the Vimśottarī timeline " + (birth ? "from your birth in " + birth.getUTCFullYear() + " to today" : "up to today") + ", you moved through " + past.length + " Mahādaśā period(s): " + past.map(p=>p.lord).join(", ") + ".");
+  }
+  if (current) {
+    parts.push("You are currently in the " + current.lord + " Mahādaśā — the tradition associates it with " + (current.themes||"its symbolic themes") + ".");
+  }
+  if (askedFuture && future.length) {
+    parts.push("After the current period, the cycle continues with " + future.length + " further Mahādaśā period(s): " + future.map(p=>p.lord).join(", ") + ".");
+  }
+  parts.push("Vimśottarī dates and themes are a traditional timing framework, not a record of specific events.");
+  if ((askedPast || askedFuture) && payload.used_default_overview) {
+    payload.matched_topics = [];
+    payload.used_default_overview = false;
+  }
+  payload.timeline = Object.assign({}, t, { past, current, future, plain_language: parts.join(" ") });
+  return payload;
+}
 async function askQuestion(){
   const input=$("qaQuestion"), box=$("qaAnswer");
   const question=(input.value||"").trim();
